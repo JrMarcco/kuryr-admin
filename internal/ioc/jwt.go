@@ -24,7 +24,7 @@ func InitJwtManager() easyjwt.Manager[domain.AuthUser] {
 	}
 
 	claimsCfg := easyjwt.NewClaimsConfig(
-		time.Duration(jwtCfg.Expiration),
+		time.Duration(jwtCfg.Expiration)*time.Second,
 		easyjwt.WithIssuer("kuryr-admin"),
 	)
 

@@ -11,6 +11,8 @@ CREATE TABLE `sys_user` (
     UNIQUE KEY `uk_username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户信息表';
 
+-- $2a$10$besICPqbCRWOocqlsaKXV.rniGRyCNPLHeFT.osXbhgisW4XSW/um
+
 DROP TABLE IF EXISTS `biz_info`;
 CREATE TABLE `biz_info` (
     `id` BIGINT UNSIGNED NOT NULL PRIMARY KEY,

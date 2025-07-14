@@ -7,8 +7,15 @@ app:
 db:
   dsn: "jrmarcco:<passwd>@tcp(192.168.3.3:3306)/kuryr_admin?charset=utf8mb4&collation=utf8mb4_general_ci&parseTime=True&loc=Local&timeout=1s&readTimeout=3s&writeTimeout=3s&multiStatements=true&interpolateParams=true"
 
+cors:
+  # 单位（秒）
+  max_age: 86400
+  domain_names:
+    - "localhost"
+
 jwt:
-  expiration: 1
+  # 单位（秒）
+  expiration: 86400
   private: |
     -----BEGIN PRIVATE KEY-----
     MC4CAQAwBQYDK2VwBCIEINuchwbkYeYD/jnGLyPjRAufQGP+WUckh+PK6U4u7fk1

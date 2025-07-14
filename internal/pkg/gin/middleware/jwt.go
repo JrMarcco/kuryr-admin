@@ -11,13 +11,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-const (
-	headerNameJwtToken     = "x-jwt-token"
-	headerNameRefreshToken = "x-refresh-token"
-
-	paramNameAuthUser = "auth-user"
-)
-
 var _ Builder = (*JwtBuilder)(nil)
 
 type JwtBuilder struct {
