@@ -10,7 +10,7 @@ db:
 cors:
   # 单位（秒）
   max_age: 86400
-  domain_names:
+  hostnames:
     - "localhost"
 
 jwt:

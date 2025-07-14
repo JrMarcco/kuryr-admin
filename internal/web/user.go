@@ -45,6 +45,7 @@ func (h *UserHandler) Login(ctx *gin.Context, req LoginReq) (ginpkg.R, error) {
 			Msg:  err.Error(),
 		}, err
 	}
+
 	return ginpkg.R{
 		Code: http.StatusOK,
 		Data: token,

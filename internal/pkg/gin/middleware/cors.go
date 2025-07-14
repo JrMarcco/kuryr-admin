@@ -22,7 +22,7 @@ type CorsBuilder struct {
 }
 
 func (b *CorsBuilder) Build() gin.HandlerFunc {
-	corsCfg := cors.Config{
+	return cors.New(cors.Config{
 		AllowCredentials: b.allowCredentials,
 		AllowMethods:     b.allowMethods,
 		AllowHeaders:     b.allowHeaders,
@@ -30,9 +30,7 @@ func (b *CorsBuilder) Build() gin.HandlerFunc {
 		MaxAge:           b.maxAge,
 
 		AllowOriginFunc: b.allowOriginFunc,
-	}
-
-	return cors.New(corsCfg)
+	})
 }
 
 func (b *CorsBuilder) AllowCredentials(allowCredentials bool) *CorsBuilder {
@@ -67,10 +65,10 @@ func (b *CorsBuilder) AllowOriginFunc(allowOriginFunc func(origin string) bool) 
 
 func NewCorsBuilder() *CorsBuilder {
 	return &CorsBuilder{
-		allowCredentials: true,
-		allowMethods:     []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
-		allowHeaders:     []string{"Content-Length", "Content-Type", "Authorization"},
-		exposeHeaders:    []string{headerNameJwtToken, headerNameRefreshToken},
+		allowCredentials: false,
+		allowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodConnect, http.MethodOptions, http.MethodTrace},
+		allowHeaders:     []string{"Content-Length", "Content-Type", "Authorization", "Accept", "Origin"},
+		exposeHeaders:    []string{"Origin", "Content-Length", "Content-Type"},
 		maxAge:           12 * time.Hour,
 		allowOriginFunc: func(origin string) bool {
 			if strings.HasPrefix(origin, "http://localhost") {

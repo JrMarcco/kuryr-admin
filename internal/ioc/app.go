@@ -13,11 +13,8 @@ import (
 )
 
 var AppFxOpt = fx.Provide(
-	fx.Annotate(
-		InitApp,
-		// 第一个参数是 zap.Logger 不需要使用标签
-		fx.ParamTags(``, ``, `group:"middleware-builder"`),
-	),
+	InitApp,
+	InitMiddlewares,
 )
 
 var AppFxInvoke = fx.Invoke(AppLifecycle)
@@ -70,6 +67,18 @@ func InitApp(engine *gin.Engine, logger *zap.Logger, mbs []middleware.Builder) *
 	return &App{
 		svr:    svr,
 		logger: logger,
+	}
+}
+
+// InitMiddlewares 提供一个用于创建有序中间件切片的函数
+func InitMiddlewares(
+	corsBuilder *middleware.CorsBuilder,
+	jwtBuilder *middleware.JwtBuilder,
+) []middleware.Builder {
+	// 在这里，您可以按照想要的顺序来排列中间件
+	return []middleware.Builder{
+		corsBuilder,
+		jwtBuilder,
 	}
 }
 

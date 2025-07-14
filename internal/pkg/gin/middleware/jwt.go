@@ -7,6 +7,7 @@ import (
 	eawsyjwt "github.com/JrMarcco/easy-kit/jwt"
 	"github.com/JrMarcco/easy-kit/set"
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
+	ginpkg "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 )
@@ -39,13 +40,13 @@ func (b *JwtBuilder) Build() gin.HandlerFunc {
 		}
 
 		au := decrypted.Data
-		ctx.Set(paramNameAuthUser, au)
+		ctx.Set(ginpkg.ParamNameAuthUser, au)
 		ctx.Next()
 	}
 }
 
 func (b *JwtBuilder) ExtractToken(ctx *gin.Context) string {
-	token := ctx.GetHeader(headerNameJwtToken)
+	token := ctx.GetHeader(ginpkg.HeaderNameJwtToken)
 	if token != "" {
 		return strings.TrimPrefix(token, "Bearer ")
 	}

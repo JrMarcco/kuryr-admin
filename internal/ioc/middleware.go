@@ -1,6 +1,8 @@
 package ioc
 
 import (
+	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -14,22 +16,14 @@ import (
 )
 
 var MiddlewareBuilderOpt = fx.Provide(
-	fx.Annotate(
-		InitCorsBuilder,
-		fx.As(new(middleware.Builder)),
-		fx.ResultTags(`group:"middleware-builder"`),
-	),
-	fx.Annotate(
-		InitJwtBuilder,
-		fx.As(new(middleware.Builder)),
-		fx.ResultTags(`group:"middleware-builder"`),
-	),
+	InitCorsBuilder,
+	InitJwtBuilder,
 )
 
 func InitCorsBuilder() *middleware.CorsBuilder {
 	type config struct {
-		MaxAge      int      `mapstructure:"max_age"`
-		DomainNames []string `mapstructure:"domain_names"`
+		MaxAge    int      `mapstructure:"max_age"`
+		Hostnames []string `mapstructure:"hostnames"`
 	}
 	cfg := &config{}
 	if err := viper.UnmarshalKey("cors", cfg); err != nil {
@@ -37,10 +31,21 @@ func InitCorsBuilder() *middleware.CorsBuilder {
 	}
 
 	builder := middleware.NewCorsBuilder().
+		AllowCredentials(true).
+		AllowMethods([]string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions}).
+		AllowHeaders([]string{"Content-Type", "Content-Length", "Authorization", "Accept", "Origin"}).
 		MaxAge(time.Duration(cfg.MaxAge) * time.Second).
 		AllowOriginFunc(func(origin string) bool {
-			for _, domainName := range cfg.DomainNames {
-				if strings.Contains(origin, domainName) {
+			if origin == "" {
+				return false
+			}
+			u, err := url.Parse(origin)
+			if err != nil {
+				return false
+			}
+			reqHostname := u.Hostname()
+			for _, hostname := range cfg.Hostnames {
+				if reqHostname == hostname {
 					return true
 				}
 			}
