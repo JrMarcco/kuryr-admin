@@ -1,0 +1,22 @@
+profile:
+  env: "dev"
+
+app:
+  addr: ":8080"
+
+db:
+  dsn: "jrmarcco:<passwd>@tcp(192.168.3.3:3306)/kuryr_admin?charset=utf8mb4&collation=utf8mb4_general_ci&parseTime=True&loc=Local&timeout=1s&readTimeout=3s&writeTimeout=3s&multiStatements=true&interpolateParams=true"
+
+jwt:
+  expiration: 1
+  private: |
+    -----BEGIN PRIVATE KEY-----
+    MC4CAQAwBQYDK2VwBCIEINuchwbkYeYD/jnGLyPjRAufQGP+WUckh+PK6U4u7fk1
+    -----END PRIVATE KEY-----
+  public: |
+    -----BEGIN PUBLIC KEY-----
+    MCowBQYDK2VwAyEA818wiIDR2aqxvLKcyQL2qvVCYlSs2A/izQi/K109rlU=
+    -----END PUBLIC KEY-----
+
+ignores:
+  - "/api/v1/user/login"
