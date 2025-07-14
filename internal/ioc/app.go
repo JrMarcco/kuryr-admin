@@ -5,17 +5,13 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/JrMarcco/kuryr-admin/internal/pkg/gin/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
 
-var AppFxOpt = fx.Provide(
-	InitApp,
-	InitMiddlewares,
-)
+var AppFxOpt = fx.Provide(InitApp)
 
 var AppFxInvoke = fx.Invoke(AppLifecycle)
 
@@ -43,7 +39,7 @@ func (app *App) Stop(ctx context.Context) error {
 	return nil
 }
 
-func InitApp(engine *gin.Engine, logger *zap.Logger, mbs []middleware.Builder) *App {
+func InitApp(engine *gin.Engine, logger *zap.Logger) *App {
 	type config struct {
 		Addr string `mapstructure:"addr"`
 	}
@@ -57,28 +53,9 @@ func InitApp(engine *gin.Engine, logger *zap.Logger, mbs []middleware.Builder) *
 		Handler: engine.Handler(),
 	}
 
-	// 注册中间件
-	middlewares := make([]gin.HandlerFunc, 0, len(mbs))
-	for _, mb := range mbs {
-		middlewares = append(middlewares, mb.Build())
-	}
-	engine.Use(middlewares...)
-
 	return &App{
 		svr:    svr,
 		logger: logger,
-	}
-}
-
-// InitMiddlewares 提供一个用于创建有序中间件切片的函数
-func InitMiddlewares(
-	corsBuilder *middleware.CorsBuilder,
-	jwtBuilder *middleware.JwtBuilder,
-) []middleware.Builder {
-	// 在这里，您可以按照想要的顺序来排列中间件
-	return []middleware.Builder{
-		corsBuilder,
-		jwtBuilder,
 	}
 }
 
