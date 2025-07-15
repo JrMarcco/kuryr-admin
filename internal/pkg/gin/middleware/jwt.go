@@ -6,7 +6,6 @@ import (
 
 	eawsyjwt "github.com/JrMarcco/easy-kit/jwt"
 	"github.com/JrMarcco/easy-kit/set"
-	"github.com/JrMarcco/kuryr-admin/internal/domain"
 	ginpkg "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -16,7 +15,7 @@ var _ Builder = (*JwtBuilder)(nil)
 
 type JwtBuilder struct {
 	rc        redis.Cmdable
-	atManager eawsyjwt.Manager[domain.AuthUser] // 这里是 access token manager
+	atManager eawsyjwt.Manager[ginpkg.AuthUser] // 这里是 access token manager
 	ignores   set.Set[string]
 }
 
@@ -54,7 +53,7 @@ func (b *JwtBuilder) ExtractToken(ctx *gin.Context) string {
 }
 
 func NewJwtBuilder(
-	rc redis.Cmdable, atManager eawsyjwt.Manager[domain.AuthUser], ignores set.Set[string],
+	rc redis.Cmdable, atManager eawsyjwt.Manager[ginpkg.AuthUser], ignores set.Set[string],
 ) *JwtBuilder {
 	return &JwtBuilder{
 		rc:        rc,

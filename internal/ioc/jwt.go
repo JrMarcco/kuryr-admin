@@ -4,7 +4,7 @@ import (
 	"time"
 
 	easyjwt "github.com/JrMarcco/easy-kit/jwt"
-	"github.com/JrMarcco/kuryr-admin/internal/domain"
+	ginpkg "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
 )
@@ -42,7 +42,7 @@ func loadJwtConfig() *jwtConfig {
 }
 
 // InitAccessTokenManager 创建用于 Access Token 的 Manager
-func InitAccessTokenManager() easyjwt.Manager[domain.AuthUser] {
+func InitAccessTokenManager() easyjwt.Manager[ginpkg.AuthUser] {
 	jwtCfg := loadJwtConfig()
 
 	claimsCfg := easyjwt.NewClaimsConfig(
@@ -50,7 +50,7 @@ func InitAccessTokenManager() easyjwt.Manager[domain.AuthUser] {
 		easyjwt.WithIssuer(jwtCfg.Access.Issuer),
 	)
 
-	manager, err := easyjwt.NewEd25519ManagerBuilder[domain.AuthUser](jwtCfg.Private, jwtCfg.Public).
+	manager, err := easyjwt.NewEd25519ManagerBuilder[ginpkg.AuthUser](jwtCfg.Private, jwtCfg.Public).
 		ClaimsConfig(claimsCfg).
 		Build()
 	if err != nil {
@@ -60,7 +60,7 @@ func InitAccessTokenManager() easyjwt.Manager[domain.AuthUser] {
 }
 
 // InitRefreshTokenManager 创建用于 Refresh Token 的 Manager
-func InitRefreshTokenManager() easyjwt.Manager[domain.AuthUser] {
+func InitRefreshTokenManager() easyjwt.Manager[ginpkg.AuthUser] {
 	jwtCfg := loadJwtConfig()
 
 	claimsCfg := easyjwt.NewClaimsConfig(
@@ -68,7 +68,7 @@ func InitRefreshTokenManager() easyjwt.Manager[domain.AuthUser] {
 		easyjwt.WithIssuer(jwtCfg.Refresh.Issuer),
 	)
 
-	manager, err := easyjwt.NewEd25519ManagerBuilder[domain.AuthUser](jwtCfg.Private, jwtCfg.Public).
+	manager, err := easyjwt.NewEd25519ManagerBuilder[ginpkg.AuthUser](jwtCfg.Private, jwtCfg.Public).
 		ClaimsConfig(claimsCfg).
 		Build()
 	if err != nil {

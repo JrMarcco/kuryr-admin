@@ -7,9 +7,16 @@ import (
 
 var ServiceFxOpt = fx.Options(
 	fx.Provide(
+		// user service
 		fx.Annotate(
 			service.NewUserService,
 			fx.As(new(service.UserService)),
 			fx.ParamTags(``, `name:"access-token-manager"`, `name:"refresh-token-manager"`),
-		)),
+		),
+		// biz service
+		fx.Annotate(
+			service.NewBizService,
+			fx.As(new(service.BizService)),
+		),
+	),
 )

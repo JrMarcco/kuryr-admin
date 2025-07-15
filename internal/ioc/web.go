@@ -8,9 +8,16 @@ import (
 )
 
 var HandlerFxOpt = fx.Provide(
+	// user handler
 	fx.Annotate(
 		web.NewUserHandler,
-		fx.As(new(ginpkg.Registry)),
+		fx.As(new(ginpkg.RouteRegistry)),
+		fx.ResultTags(`group:"handler"`),
+	),
+	// biz handler
+	fx.Annotate(
+		web.NewBizHandler,
+		fx.As(new(ginpkg.RouteRegistry)),
 		fx.ResultTags(`group:"handler"`),
 	),
 )
@@ -23,7 +30,7 @@ var HandlerFxInvoke = fx.Invoke(
 )
 
 // RegisterRoutes 注册路由
-func RegisterRoutes(engine *gin.Engine, registries []ginpkg.Registry) {
+func RegisterRoutes(engine *gin.Engine, registries []ginpkg.RouteRegistry) {
 	for _, registry := range registries {
 		registry.RegisterRoutes(engine)
 	}

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/JrMarcco/easy-kit/jwt"
-	"github.com/JrMarcco/kuryr-admin/internal/domain"
+	ginpkg "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/JrMarcco/kuryr-admin/internal/repository"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -20,8 +20,8 @@ var _ UserService = (*DefaultUserService)(nil)
 type DefaultUserService struct {
 	userRepo repository.UserRepo
 
-	atManager jwt.Manager[domain.AuthUser] // access token manager
-	stManager jwt.Manager[domain.AuthUser] // refresh token manager
+	atManager jwt.Manager[ginpkg.AuthUser] // access token manager
+	stManager jwt.Manager[ginpkg.AuthUser] // refresh token manager
 }
 
 func (s *DefaultUserService) Login(ctx context.Context, username string, password string) (accessToken, refreshToken string, err error) {
@@ -34,9 +34,10 @@ func (s *DefaultUserService) Login(ctx context.Context, username string, passwor
 		return "", "", err
 	}
 
-	return s.generateToken(domain.AuthUser{
-		SSId: uuid.NewString(),
-		Id:   u.Id,
+	return s.generateToken(ginpkg.AuthUser{
+		Id:       u.Id,
+		Sid:      uuid.NewString(),
+		UserType: u.UserType,
 	})
 }
 
@@ -49,7 +50,7 @@ func (s *DefaultUserService) RefreshToken(ctx context.Context, rt string) (acces
 	return s.generateToken(au)
 }
 
-func (s *DefaultUserService) generateToken(au domain.AuthUser) (accessToken, refreshToken string, err error) {
+func (s *DefaultUserService) generateToken(au ginpkg.AuthUser) (accessToken, refreshToken string, err error) {
 	// access token
 	at, err := s.atManager.Encrypt(au)
 	if err != nil {
@@ -64,7 +65,7 @@ func (s *DefaultUserService) generateToken(au domain.AuthUser) (accessToken, ref
 }
 
 func NewUserService(
-	userRepo repository.UserRepo, atManager, stManager jwt.Manager[domain.AuthUser],
+	userRepo repository.UserRepo, atManager, stManager jwt.Manager[ginpkg.AuthUser],
 ) *DefaultUserService {
 	return &DefaultUserService{
 		userRepo:  userRepo,

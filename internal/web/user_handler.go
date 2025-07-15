@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var _ ginpkg.Registry = (*UserHandler)(nil)
+var _ ginpkg.RouteRegistry = (*UserHandler)(nil)
 
 type UserHandler struct {
 	userSvc service.UserService
@@ -17,25 +17,25 @@ type UserHandler struct {
 func (h *UserHandler) RegisterRoutes(engine *gin.Engine) {
 	v1 := engine.Group("/api/v1/user")
 
-	v1.Handle(http.MethodPost, "/login", ginpkg.B[LoginReq](h.Login))
-	v1.Handle(http.MethodPost, "/refresh_token", ginpkg.B[RefreshTokenReq](h.RefreshToken))
+	v1.Handle(http.MethodPost, "/login", ginpkg.B[loginReq](h.Login))
+	v1.Handle(http.MethodPost, "/refresh_token", ginpkg.B[refreshTokenReq](h.RefreshToken))
 }
 
-type LoginReq struct {
+type loginReq struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-type RefreshTokenReq struct {
+type refreshTokenReq struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-type TokenResp struct {
+type tokenResp struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
 
-func (h *UserHandler) Login(ctx *gin.Context, req LoginReq) (ginpkg.R, error) {
+func (h *UserHandler) Login(ctx *gin.Context, req loginReq) (ginpkg.R, error) {
 	at, st, err := h.userSvc.Login(ctx, req.Username, req.Password)
 	if err != nil {
 		return ginpkg.R{
@@ -45,14 +45,14 @@ func (h *UserHandler) Login(ctx *gin.Context, req LoginReq) (ginpkg.R, error) {
 	}
 	return ginpkg.R{
 		Code: http.StatusOK,
-		Data: TokenResp{
+		Data: tokenResp{
 			AccessToken:  at,
 			RefreshToken: st,
 		},
 	}, nil
 }
 
-func (h *UserHandler) RefreshToken(ctx *gin.Context, req RefreshTokenReq) (ginpkg.R, error) {
+func (h *UserHandler) RefreshToken(ctx *gin.Context, req refreshTokenReq) (ginpkg.R, error) {
 	at, st, err := h.userSvc.RefreshToken(ctx, req.RefreshToken)
 	if err != nil {
 		return ginpkg.R{
@@ -62,7 +62,7 @@ func (h *UserHandler) RefreshToken(ctx *gin.Context, req RefreshTokenReq) (ginpk
 	}
 	return ginpkg.R{
 		Code: http.StatusOK,
-		Data: TokenResp{
+		Data: tokenResp{
 			AccessToken:  at,
 			RefreshToken: st,
 		},

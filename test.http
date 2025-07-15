@@ -9,6 +9,8 @@ Content-Type: application/json
 
 > {%
     // noinspection JSUnresolvedReference
+    client.global.set("access_token", response.body.data.access_token);
+    // noinspection JSUnresolvedReference
     client.global.set("refresh_token", response.body.data.refresh_token);
 %}
 
@@ -20,3 +22,8 @@ Content-Type: application/json
 {
     "refresh_token": "{{refresh_token}}"
 }
+
+
+#### List Biz
+GET http://localhost:8080/api/v1/biz/list?offset=0&limit=10
+X-ACCESS-TOKEN: {{access_token}}

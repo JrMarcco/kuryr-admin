@@ -33,11 +33,10 @@ type DefaultUserDAO struct {
 
 func (d *DefaultUserDAO) FindByUsername(ctx context.Context, username string) (SysUser, error) {
 	var su SysUser
-	err := d.db.WithContext(ctx).Model(&SysUser{}).Where("username = ?", username).First(&su).Error
-	if err != nil {
-		return SysUser{}, err
-	}
-	return su, nil
+	err := d.db.WithContext(ctx).Model(&SysUser{}).
+		Where("username = ?", username).
+		First(&su).Error
+	return su, err
 }
 
 func NewUserDAO(db *gorm.DB) *DefaultUserDAO {

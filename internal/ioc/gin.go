@@ -29,7 +29,6 @@ func InitGin(mbs []middleware.Builder) *gin.Engine {
 	// 注册中间件
 	//
 	// 注意：
-	//
 	//	这里需要保证 fx 在 ioc.RegisterRoutes 之前完成。
 	//	ioc.RegisterRoutes 在 engine.Use(middlewares...) 之前调用，
 	//	会导致这里注册的路由“错过”这里注册的 middleware ，即导致 middleware 失效。
