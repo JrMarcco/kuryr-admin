@@ -7,6 +7,10 @@ app:
 db:
   dsn: "jrmarcco:<passwd>@tcp(192.168.3.3:3306)/kuryr_admin?charset=utf8mb4&collation=utf8mb4_general_ci&parseTime=True&loc=Local&timeout=1s&readTimeout=3s&writeTimeout=3s&multiStatements=true&interpolateParams=true"
 
+redis:
+  addr: 192.168.3.3:6379
+  password: "<passwd>"
+
 cors:
   # 单位（秒）
   max_age: 86400
@@ -32,3 +36,6 @@ jwt:
 ignores:
   - "/api/v1/user/login"
   - "/api/v1/user/refresh_token"
+
+session:
+  expiration: 604800 # 推荐和 refresh token 的过期时间一致

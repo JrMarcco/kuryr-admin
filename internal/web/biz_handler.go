@@ -47,7 +47,7 @@ func (h *BizHandler) List(ctx *gin.Context, req listBizReq, au ginpkg.AuthUser) 
 		}
 	case domain.UserTypeOperator:
 		var bizInfo domain.BizInfo
-		bizInfo, err = h.bizSvc.FindById(ctx, au.Id)
+		bizInfo, err = h.bizSvc.FindById(ctx, au.Uid)
 		list = append(list, bizInfo)
 		total = 1
 	default:

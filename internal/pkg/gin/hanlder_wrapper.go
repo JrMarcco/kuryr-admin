@@ -107,7 +107,7 @@ func BU[Req any](bizFunc func(*gin.Context, Req, AuthUser) (R, error)) gin.Handl
 			slog.Error("failed to bind request", slog.Any("err", err))
 			return
 		}
-		rawVal, ok := ctx.Get(ParamNameAuthUser)
+		rawVal, ok := ctx.Get(ContextKeyAuthUser)
 		if !ok {
 			slog.Error("failed to get auth user")
 			ctx.AbortWithStatus(http.StatusUnauthorized)
@@ -140,7 +140,7 @@ func QU[Req any](bizFunc func(*gin.Context, Req, AuthUser) (R, error)) gin.Handl
 			slog.Error("failed to bind request from query", slog.Any("err", err))
 			return
 		}
-		rawVal, ok := ctx.Get(ParamNameAuthUser)
+		rawVal, ok := ctx.Get(ContextKeyAuthUser)
 		if !ok {
 			slog.Error("failed to get auth user")
 			ctx.AbortWithStatus(http.StatusUnauthorized)
@@ -173,7 +173,7 @@ func PU[Req any](bizFunc func(*gin.Context, Req, AuthUser) (R, error)) gin.Handl
 			slog.Error("failed to bind request from uri", slog.Any("err", err))
 			return
 		}
-		rawVal, ok := ctx.Get(ParamNameAuthUser)
+		rawVal, ok := ctx.Get(ContextKeyAuthUser)
 		if !ok {
 			slog.Error("failed to get auth user")
 			ctx.AbortWithStatus(http.StatusUnauthorized)

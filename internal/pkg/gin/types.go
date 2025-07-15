@@ -6,10 +6,8 @@ import (
 )
 
 const (
-	HeaderNameAccessToken  = "x-access-token"
-	HeaderNameRefreshToken = "x-refresh-token"
-
-	ParamNameAuthUser = "auth-user"
+	HeaderNameAccessToken = "x-access-token"
+	ContextKeyAuthUser    = "auth-user"
 )
 
 // RouteRegistry 路由注册器。
@@ -26,7 +24,7 @@ type R struct {
 }
 
 type AuthUser struct {
-	Id       uint64          `json:"id"`
+	Uid      uint64          `json:"uid"`
 	Sid      string          `json:"sid"`
 	UserType domain.UserType `json:"user_type"`
 }

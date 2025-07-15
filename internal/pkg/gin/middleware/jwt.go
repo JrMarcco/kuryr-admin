@@ -7,16 +7,16 @@ import (
 	eawsyjwt "github.com/JrMarcco/easy-kit/jwt"
 	"github.com/JrMarcco/easy-kit/set"
 	ginpkg "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
+	"github.com/JrMarcco/kuryr-admin/internal/service/session"
 	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
 )
 
 var _ Builder = (*JwtBuilder)(nil)
 
 type JwtBuilder struct {
-	rc        redis.Cmdable
-	atManager eawsyjwt.Manager[ginpkg.AuthUser] // 这里是 access token manager
-	ignores   set.Set[string]
+	sessionSvc session.Service
+	atManager  eawsyjwt.Manager[ginpkg.AuthUser] // 这里是 access token manager
+	ignores    set.Set[string]
 }
 
 func (b *JwtBuilder) Build() gin.HandlerFunc {
@@ -39,7 +39,17 @@ func (b *JwtBuilder) Build() gin.HandlerFunc {
 		}
 
 		au := decrypted.Data
-		ctx.Set(ginpkg.ParamNameAuthUser, au)
+		// 检查 session
+		// 注意：
+		//	这里是可选的，只依赖 RefreshToken 的检测通常就足够了。
+		//err = b.sessionSvc.Check(ctx, au.Sid)
+		//if err != nil {
+		//	// 系统错误或用户已经退出登录
+		//	ctx.AbortWithStatus(http.StatusUnauthorized)
+		//	return
+		//}
+
+		ctx.Set(ginpkg.ContextKeyAuthUser, au)
 		ctx.Next()
 	}
 }
@@ -53,11 +63,11 @@ func (b *JwtBuilder) ExtractToken(ctx *gin.Context) string {
 }
 
 func NewJwtBuilder(
-	rc redis.Cmdable, atManager eawsyjwt.Manager[ginpkg.AuthUser], ignores set.Set[string],
+	sessionSvc session.Service, atManager eawsyjwt.Manager[ginpkg.AuthUser], ignores set.Set[string],
 ) *JwtBuilder {
 	return &JwtBuilder{
-		rc:        rc,
-		atManager: atManager,
-		ignores:   ignores,
+		sessionSvc: sessionSvc,
+		atManager:  atManager,
+		ignores:    ignores,
 	}
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/JrMarcco/easy-kit/set"
 	ginpkg "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/JrMarcco/kuryr-admin/internal/pkg/gin/middleware"
-	"github.com/redis/go-redis/v9"
+	"github.com/JrMarcco/kuryr-admin/internal/service/session"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
 )
@@ -36,7 +36,6 @@ func InitCorsBuilder() *middleware.CorsBuilder {
 	builder := middleware.NewCorsBuilder().
 		AllowCredentials(true).
 		AllowMethods([]string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions}).
-		AllowHeaders([]string{ginpkg.HeaderNameAccessToken, ginpkg.HeaderNameRefreshToken, "Origin", "Content-Length", "Content-Type"}).
 		MaxAge(time.Duration(cfg.MaxAge) * time.Second).
 		AllowOriginFunc(func(origin string) bool {
 			if origin == "" {
@@ -57,7 +56,7 @@ func InitCorsBuilder() *middleware.CorsBuilder {
 	return builder
 }
 
-func InitJwtBuilder(rc redis.Cmdable, jwtManager easyjwt.Manager[ginpkg.AuthUser]) *middleware.JwtBuilder {
+func InitJwtBuilder(sessionSvc session.Service, jwtManager easyjwt.Manager[ginpkg.AuthUser]) *middleware.JwtBuilder {
 	var ignores []string
 	if err := viper.UnmarshalKey("ignores", &ignores); err != nil {
 		panic(err)
@@ -70,7 +69,7 @@ func InitJwtBuilder(rc redis.Cmdable, jwtManager easyjwt.Manager[ginpkg.AuthUser
 	for _, ignore := range ignores {
 		ts.Add(ignore)
 	}
-	return middleware.NewJwtBuilder(rc, jwtManager, ts)
+	return middleware.NewJwtBuilder(sessionSvc, jwtManager, ts)
 }
 
 func InitAccessLogBuilder() *middleware.AccessLogBuilder {

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/JrMarcco/easy-kit/jwt"
+	"github.com/JrMarcco/kuryr-admin/internal/errs"
 	ginpkg "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/JrMarcco/kuryr-admin/internal/repository"
 	"github.com/google/uuid"
@@ -11,46 +12,38 @@ import (
 )
 
 type UserService interface {
-	Login(ctx context.Context, username string, password string) (accessToken, refreshToken string, err error)
-	RefreshToken(ctx context.Context, rt string) (accessToken, refreshToken string, err error)
+	Login(ctx context.Context, username string, password string) (ginpkg.AuthUser, error)
+	GenerateToken(ctx context.Context, au ginpkg.AuthUser) (accessToken, refreshToken string, err error)
+	VerifyRefreshToken(ctx context.Context, token string) (ginpkg.AuthUser, error)
 }
 
-var _ UserService = (*DefaultUserService)(nil)
+var _ UserService = (*JwtUserService)(nil)
 
-type DefaultUserService struct {
+type JwtUserService struct {
 	userRepo repository.UserRepo
 
 	atManager jwt.Manager[ginpkg.AuthUser] // access token manager
 	stManager jwt.Manager[ginpkg.AuthUser] // refresh token manager
 }
 
-func (s *DefaultUserService) Login(ctx context.Context, username string, password string) (accessToken, refreshToken string, err error) {
+func (s *JwtUserService) Login(ctx context.Context, username string, password string) (ginpkg.AuthUser, error) {
 	u, err := s.userRepo.FindByUsername(ctx, username)
 	if err != nil {
-		return "", "", err
+		return ginpkg.AuthUser{}, errs.ErrInvalidUser
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)); err != nil {
-		return "", "", err
+		return ginpkg.AuthUser{}, errs.ErrInvalidUser
 	}
 
-	return s.generateToken(ginpkg.AuthUser{
-		Id:       u.Id,
+	return ginpkg.AuthUser{
+		Uid:      u.Id,
 		Sid:      uuid.NewString(),
 		UserType: u.UserType,
-	})
+	}, nil
 }
 
-func (s *DefaultUserService) RefreshToken(ctx context.Context, rt string) (accessToken, refreshToken string, err error) {
-	decrypt, err := s.stManager.Decrypt(rt)
-	if err != nil {
-		return "", "", err
-	}
-	au := decrypt.Data
-	return s.generateToken(au)
-}
-
-func (s *DefaultUserService) generateToken(au ginpkg.AuthUser) (accessToken, refreshToken string, err error) {
+func (s *JwtUserService) GenerateToken(_ context.Context, au ginpkg.AuthUser) (accessToken, refreshToken string, err error) {
 	// access token
 	at, err := s.atManager.Encrypt(au)
 	if err != nil {
@@ -64,10 +57,18 @@ func (s *DefaultUserService) generateToken(au ginpkg.AuthUser) (accessToken, ref
 	return at, rt, nil
 }
 
-func NewUserService(
+func (s *JwtUserService) VerifyRefreshToken(_ context.Context, token string) (ginpkg.AuthUser, error) {
+	decrypt, err := s.stManager.Decrypt(token)
+	if err != nil {
+		return ginpkg.AuthUser{}, err
+	}
+	return decrypt.Data, nil
+}
+
+func NewJwtUserService(
 	userRepo repository.UserRepo, atManager, stManager jwt.Manager[ginpkg.AuthUser],
-) *DefaultUserService {
-	return &DefaultUserService{
+) *JwtUserService {
+	return &JwtUserService{
 		userRepo:  userRepo,
 		atManager: atManager,
 		stManager: stManager,
