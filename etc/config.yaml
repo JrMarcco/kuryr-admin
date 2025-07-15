@@ -14,8 +14,6 @@ cors:
     - "localhost"
 
 jwt:
-  # 单位（秒）
-  expiration: 86400
   private: |
     -----BEGIN PRIVATE KEY-----
     MC4CAQAwBQYDK2VwBCIEINuchwbkYeYD/jnGLyPjRAufQGP+WUckh+PK6U4u7fk1
@@ -24,6 +22,13 @@ jwt:
     -----BEGIN PUBLIC KEY-----
     MCowBQYDK2VwAyEA818wiIDR2aqxvLKcyQL2qvVCYlSs2A/izQi/K109rlU=
     -----END PUBLIC KEY-----
+  access:
+    expiration: 3600 # Access Token 过期时间，单位：秒 (例如 1 小时)
+    issuer: "kuryr-admin-access"
+  refresh:
+    expiration: 604800 # Refresh Token 过期时间，单位：秒 (例如 7 天)
+    issuer: "kuryr-admin-refresh"
 
 ignores:
   - "/api/v1/user/login"
+  - "/api/v1/user/refresh_token"

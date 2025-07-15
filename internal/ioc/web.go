@@ -18,17 +18,12 @@ var HandlerFxOpt = fx.Provide(
 var HandlerFxInvoke = fx.Invoke(
 	fx.Annotate(
 		RegisterRoutes,
-		fx.ParamTags(``, ``, `group:"handler"`),
+		fx.ParamTags(``, `group:"handler"`),
 	),
 )
 
 // RegisterRoutes 注册路由
-//
-// 注意：
-//
-//	这里声明 *App 是为了让 fx 在 RegisterRoutes 被调用之前，先初始化 ioc.App。
-//	RegisterRoutes 在 ioc.App 之前调用会导致这里注册的路由“错过” ioc.APP 初始化时注册的 middleware 导致 middleware 失效。
-func RegisterRoutes(_ *App, engine *gin.Engine, registries []ginpkg.Registry) {
+func RegisterRoutes(engine *gin.Engine, registries []ginpkg.Registry) {
 	for _, registry := range registries {
 		registry.RegisterRoutes(engine)
 	}

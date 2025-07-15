@@ -17,7 +17,10 @@ import (
 
 var MiddlewareBuilderOpt = fx.Provide(
 	InitCorsBuilder,
-	InitJwtBuilder,
+	fx.Annotate(
+		InitJwtBuilder,
+		fx.ParamTags(``, `name:"access-token-manager"`),
+	),
 )
 
 func InitCorsBuilder() *middleware.CorsBuilder {

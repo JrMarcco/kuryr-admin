@@ -3,7 +3,7 @@ package gin
 import "github.com/gin-gonic/gin"
 
 const (
-	HeaderNameJwtToken     = "x-jwt-token"
+	HeaderNameAccessToken  = "x-access-token"
 	HeaderNameRefreshToken = "x-refresh-token"
 
 	ParamNameAuthUser = "auth-user"

@@ -10,5 +10,6 @@ var ServiceFxOpt = fx.Options(
 		fx.Annotate(
 			service.NewUserService,
 			fx.As(new(service.UserService)),
+			fx.ParamTags(``, `name:"access-token-manager"`, `name:"refresh-token-manager"`),
 		)),
 )

@@ -15,5 +15,6 @@ type SysUser struct {
 }
 
 type AuthUser struct {
-	Id uint64
+	SSId string
+	Id   uint64
 }

@@ -3,8 +3,6 @@ package web
 import (
 	"net/http"
 
-	"github.com/JrMarcco/easy-kit/jwt"
-	"github.com/JrMarcco/kuryr-admin/internal/domain"
 	ginpkg "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/JrMarcco/kuryr-admin/internal/service"
 	"github.com/gin-gonic/gin"
@@ -13,14 +11,14 @@ import (
 var _ ginpkg.Registry = (*UserHandler)(nil)
 
 type UserHandler struct {
-	jwtManager jwt.Manager[domain.AuthUser]
-	userSvc    service.UserService
+	userSvc service.UserService
 }
 
 func (h *UserHandler) RegisterRoutes(engine *gin.Engine) {
 	v1 := engine.Group("/api/v1/user")
 
 	v1.Handle(http.MethodPost, "/login", ginpkg.B[LoginReq](h.Login))
+	v1.Handle(http.MethodPost, "/refresh_token", ginpkg.B[RefreshTokenReq](h.RefreshToken))
 }
 
 type LoginReq struct {
@@ -28,33 +26,49 @@ type LoginReq struct {
 	Password string `json:"password"`
 }
 
+type RefreshTokenReq struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+type TokenResp struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
 func (h *UserHandler) Login(ctx *gin.Context, req LoginReq) (ginpkg.R, error) {
-	user, err := h.userSvc.Login(ctx, req.Username, req.Password)
+	at, st, err := h.userSvc.Login(ctx, req.Username, req.Password)
 	if err != nil {
 		return ginpkg.R{
 			Code: http.StatusUnauthorized,
 			Msg:  err.Error(),
 		}, err
 	}
-
-	au := domain.AuthUser{Id: user.Id}
-	token, err := h.jwtManager.Encrypt(au)
-	if err != nil {
-		return ginpkg.R{
-			Code: http.StatusUnauthorized,
-			Msg:  err.Error(),
-		}, err
-	}
-
 	return ginpkg.R{
 		Code: http.StatusOK,
-		Data: token,
+		Data: TokenResp{
+			AccessToken:  at,
+			RefreshToken: st,
+		},
 	}, nil
 }
 
-func NewUserHandler(jwtManager jwt.Manager[domain.AuthUser], userSvc service.UserService) *UserHandler {
-	return &UserHandler{
-		jwtManager: jwtManager,
-		userSvc:    userSvc,
+func (h *UserHandler) RefreshToken(ctx *gin.Context, req RefreshTokenReq) (ginpkg.R, error) {
+	at, st, err := h.userSvc.RefreshToken(ctx, req.RefreshToken)
+	if err != nil {
+		return ginpkg.R{
+			Code: http.StatusUnauthorized,
+			Msg:  err.Error(),
+		}, err
 	}
+	return ginpkg.R{
+		Code: http.StatusOK,
+		Data: TokenResp{
+			AccessToken:  at,
+			RefreshToken: st,
+		},
+	}, nil
+}
+
+func NewUserHandler(userSvc service.UserService) *UserHandler {
+	return &UserHandler{userSvc: userSvc}
 }

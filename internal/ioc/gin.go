@@ -27,6 +27,12 @@ func InitGin(mbs []middleware.Builder) *gin.Engine {
 	engine := gin.Default()
 
 	// 注册中间件
+	//
+	// 注意：
+	//
+	//	这里需要保证 fx 在 ioc.RegisterRoutes 之前完成。
+	//	ioc.RegisterRoutes 在 engine.Use(middlewares...) 之前调用，
+	//	会导致这里注册的路由“错过”这里注册的 middleware ，即导致 middleware 失效。
 	middlewares := make([]gin.HandlerFunc, 0, len(mbs))
 	for _, mb := range mbs {
 		middlewares = append(middlewares, mb.Build())

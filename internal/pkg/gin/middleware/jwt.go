@@ -15,9 +15,9 @@ import (
 var _ Builder = (*JwtBuilder)(nil)
 
 type JwtBuilder struct {
-	rc         redis.Cmdable
-	jwtManager eawsyjwt.Manager[domain.AuthUser]
-	ignores    set.Set[string]
+	rc        redis.Cmdable
+	atManager eawsyjwt.Manager[domain.AuthUser] // 这里是 access token manager
+	ignores   set.Set[string]
 }
 
 func (b *JwtBuilder) Build() gin.HandlerFunc {
@@ -33,7 +33,7 @@ func (b *JwtBuilder) Build() gin.HandlerFunc {
 			return
 		}
 
-		decrypted, err := b.jwtManager.Decrypt(token)
+		decrypted, err := b.atManager.Decrypt(token)
 		if err != nil {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
@@ -46,7 +46,7 @@ func (b *JwtBuilder) Build() gin.HandlerFunc {
 }
 
 func (b *JwtBuilder) ExtractToken(ctx *gin.Context) string {
-	token := ctx.GetHeader(ginpkg.HeaderNameJwtToken)
+	token := ctx.GetHeader(ginpkg.HeaderNameAccessToken)
 	if token != "" {
 		return strings.TrimPrefix(token, "Bearer ")
 	}
@@ -54,11 +54,11 @@ func (b *JwtBuilder) ExtractToken(ctx *gin.Context) string {
 }
 
 func NewJwtBuilder(
-	rc redis.Cmdable, jwtManager eawsyjwt.Manager[domain.AuthUser], ignores set.Set[string],
+	rc redis.Cmdable, atManager eawsyjwt.Manager[domain.AuthUser], ignores set.Set[string],
 ) *JwtBuilder {
 	return &JwtBuilder{
-		rc:         rc,
-		jwtManager: jwtManager,
-		ignores:    ignores,
+		rc:        rc,
+		atManager: atManager,
+		ignores:   ignores,
 	}
 }
