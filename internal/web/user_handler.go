@@ -22,6 +22,7 @@ func (h *UserHandler) RegisterRoutes(engine *gin.Engine) {
 
 	v1.Handle(http.MethodPost, "/login", ginpkg.B[loginReq](h.Login))
 	v1.Handle(http.MethodPost, "/refresh_token", ginpkg.B[refreshTokenReq](h.RefreshToken))
+	v1.Handle(http.MethodGet, "/logout", ginpkg.W(h.Logout))
 }
 
 type loginReq struct {
@@ -112,6 +113,35 @@ func (h *UserHandler) RefreshToken(ctx *gin.Context, req refreshTokenReq) (ginpk
 			AccessToken:  at,
 			RefreshToken: st,
 		},
+	}, nil
+}
+
+func (h *UserHandler) Logout(ctx *gin.Context) (ginpkg.R, error) {
+	userVal, ok := ctx.Get(ginpkg.HeaderNameAccessToken)
+	if !ok {
+		return ginpkg.R{
+			Code: http.StatusUnauthorized,
+			Msg:  "user not logged in",
+		}, nil
+	}
+
+	au, ok := userVal.(ginpkg.AuthUser)
+	if !ok {
+		return ginpkg.R{
+			Code: http.StatusUnauthorized,
+			Msg:  "user not logged in",
+		}, nil
+	}
+
+	if err := h.sessionSvc.Clear(ctx, au.Sid); err != nil {
+		return ginpkg.R{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, err
+	}
+	return ginpkg.R{
+		Code: http.StatusOK,
+		Msg:  "logged out",
 	}, nil
 }
 

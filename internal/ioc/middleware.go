@@ -36,6 +36,7 @@ func InitCorsBuilder() *middleware.CorsBuilder {
 	builder := middleware.NewCorsBuilder().
 		AllowCredentials(true).
 		AllowMethods([]string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions}).
+		AllowHeaders([]string{"Content-Length", "Content-Type", "Authorization", "Accept", "Origin", ginpkg.HeaderNameAccessToken}).
 		MaxAge(time.Duration(cfg.MaxAge) * time.Second).
 		AllowOriginFunc(func(origin string) bool {
 			if origin == "" {

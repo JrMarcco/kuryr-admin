@@ -5,13 +5,18 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/JrMarcco/kuryr-admin/internal/pkg/gin/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
 
-var AppFxOpt = fx.Provide(InitApp)
+var AppFxOpt = fx.Provide(
+	gin.Default,
+	InitMiddlewares,
+	InitApp,
+)
 
 var AppFxInvoke = fx.Invoke(AppLifecycle)
 
@@ -39,7 +44,7 @@ func (app *App) Stop(ctx context.Context) error {
 	return nil
 }
 
-func InitApp(engine *gin.Engine, logger *zap.Logger) *App {
+func InitApp(engine *gin.Engine, logger *zap.Logger, mbs []middleware.Builder) *App {
 	type config struct {
 		Addr string `mapstructure:"addr"`
 	}
@@ -47,6 +52,12 @@ func InitApp(engine *gin.Engine, logger *zap.Logger) *App {
 	cfg := config{}
 	if err := viper.UnmarshalKey("app", &cfg); err != nil {
 	}
+
+	middlewares := make([]gin.HandlerFunc, 0, len(mbs))
+	for _, mb := range mbs {
+		middlewares = append(middlewares, mb.Build())
+	}
+	engine.Use(middlewares...)
 
 	svr := &http.Server{
 		Addr:    cfg.Addr,
@@ -56,6 +67,18 @@ func InitApp(engine *gin.Engine, logger *zap.Logger) *App {
 	return &App{
 		svr:    svr,
 		logger: logger,
+	}
+}
+
+// InitMiddlewares 提供一个用于创建有序中间件切片的函数
+func InitMiddlewares(
+	corsBuilder *middleware.CorsBuilder,
+	jwtBuilder *middleware.JwtBuilder,
+) []middleware.Builder {
+	// 按顺序排列中间件
+	return []middleware.Builder{
+		corsBuilder,
+		jwtBuilder,
 	}
 }
 

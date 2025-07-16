@@ -15,8 +15,6 @@ func main() {
 	fx.New(
 		// 初始化 zap.Logger
 		ioc.LoggerFxOpt,
-		// 初始化 gin.Engine
-		ioc.GinFxOpt,
 		// 初始化 gorm.DB
 		ioc.DBFxOpt,
 		// 初始化 redis.Client

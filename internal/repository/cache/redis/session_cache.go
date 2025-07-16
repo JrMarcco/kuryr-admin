@@ -33,6 +33,10 @@ func (c *RSessionCache) Refresh(ctx context.Context, sid string) error {
 
 }
 
+func (c *RSessionCache) Clear(ctx context.Context, sid string) error {
+	return c.rc.Del(ctx, c.key(sid)).Err()
+}
+
 func (c *RSessionCache) key(sid string) string {
 	return fmt.Sprintf("user:sid:%s", sid)
 }
