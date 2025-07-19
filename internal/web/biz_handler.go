@@ -2,6 +2,7 @@ package web
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
 	"github.com/JrMarcco/kuryr-admin/internal/errs"
@@ -20,19 +21,37 @@ type BizHandler struct {
 func (h *BizHandler) RegisterRoutes(engine *gin.Engine) {
 	v1 := engine.Group("/api/v1/biz")
 
-	v1.Handle(http.MethodPost, "/create", ginpkg.QU[createBizReq](h.Create))
+	v1.Handle(http.MethodPost, "/create", ginpkg.BU[createBizReq](h.Create))
 	v1.Handle(http.MethodGet, "/list", ginpkg.QU[listBizReq](h.List))
 }
 
 type createBizReq struct {
-	BizName string `json:"biz_name"`
-	BizKey  string `json:"biz_key"`
+	BizKey       string `json:"biz_key"`
+	BizName      string `json:"biz_name"`
+	Contact      string `json:"contact"`
+	ContactEmail string `json:"contact_email"`
 }
 
 // Create 新建业务方信息。
 func (h *BizHandler) Create(ctx *gin.Context, req createBizReq, au ginpkg.AuthUser) (ginpkg.R, error) {
-	// TODO implement me
-	panic("implement me")
+	bi := domain.BizInfo{
+		BizKey:       req.BizKey,
+		BizName:      req.BizName,
+		Contact:      req.Contact,
+		ContactEmail: req.ContactEmail,
+		CreatorId:    au.Uid,
+	}
+	bi, err := h.bizSvc.Create(ctx, bi)
+	if err != nil {
+		return ginpkg.R{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, err
+	}
+	return ginpkg.R{
+		Code: http.StatusOK,
+		Data: strconv.FormatUint(bi.Id, 10),
+	}, nil
 }
 
 type listBizReq struct {
@@ -61,7 +80,7 @@ func (h *BizHandler) List(ctx *gin.Context, req listBizReq, au ginpkg.AuthUser) 
 		}
 	case domain.UserTypeOperator:
 		var bizInfo domain.BizInfo
-		bizInfo, err = h.bizSvc.FindById(ctx, au.Uid)
+		bizInfo, err = h.bizSvc.FindById(ctx, au.Bid)
 		list = append(list, bizInfo)
 		total = 1
 	default:

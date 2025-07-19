@@ -10,5 +10,7 @@ var (
 	ErrUnknownUser = errors.New("[kuryr-admin] unknown user")
 
 	ErrUnauthorized = errors.New("[kuryr-admin] unauthorized")
-	ErrLoginExpired = errors.New("[kuryr-admin] login expired")
+
+	ErrDuplicateKey   = errors.New("[kuryr-admin] duplicate key violation")
+	ErrBizKeyConflict = errors.New("[kuryr-admin] biz key already exists")
 )

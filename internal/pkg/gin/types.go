@@ -24,7 +24,8 @@ type R struct {
 }
 
 type AuthUser struct {
-	Uid      uint64          `json:"uid"`
-	Sid      string          `json:"sid"`
-	UserType domain.UserType `json:"user_type"`
+	Sid      string          `json:"sid"`       // session id
+	Bid      uint64          `json:"bid"`       // biz id
+	Uid      uint64          `json:"uid"`       // user id
+	UserType domain.UserType `json:"user_type"` // user type
 }

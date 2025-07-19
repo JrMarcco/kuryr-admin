@@ -2,8 +2,10 @@ package dao
 
 import (
 	"context"
+	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type BizInfo struct {
@@ -13,6 +15,7 @@ type BizInfo struct {
 	BizName      string
 	Contact      string
 	ContactEmail string
+	CreatorId    uint64
 	CreatedAt    int64
 	UpdatedAt    int64
 }
@@ -22,8 +25,9 @@ func (bi BizInfo) TableName() string {
 }
 
 type BizDAO interface {
-	Count(ctx context.Context) (int64, error)
+	SaveWithTx(ctx context.Context, tx *gorm.DB, entity BizInfo) (BizInfo, error)
 
+	Count(ctx context.Context) (int64, error)
 	List(ctx context.Context, offset, limit int) ([]BizInfo, error)
 	FindById(ctx context.Context, id uint64) (BizInfo, error)
 }
@@ -32,6 +36,26 @@ var _ BizDAO = (*DefaultBizDAO)(nil)
 
 type DefaultBizDAO struct {
 	db *gorm.DB
+}
+
+func (d *DefaultBizDAO) SaveWithTx(ctx context.Context, tx *gorm.DB, entity BizInfo) (BizInfo, error) {
+	now := time.Now().UnixMilli()
+	entity.CreatedAt = now
+	entity.UpdatedAt = now
+
+	// 这里使用 upsert
+	err := tx.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "id"}},
+		DoUpdates: clause.Assignments(map[string]any{
+			"biz_key":    entity.BizKey,
+			"biz_name":   entity.BizName,
+			"updated_at": now,
+		}),
+	}).Create(&entity).Error
+	if err != nil {
+		return BizInfo{}, err
+	}
+	return entity, nil
 }
 
 func (d *DefaultBizDAO) Count(ctx context.Context) (int64, error) {

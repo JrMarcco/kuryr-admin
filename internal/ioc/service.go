@@ -1,6 +1,8 @@
 package ioc
 
 import (
+	"github.com/JrMarcco/kuryr-admin/internal/pkg/secret"
+	"github.com/JrMarcco/kuryr-admin/internal/pkg/secret/base64"
 	"github.com/JrMarcco/kuryr-admin/internal/service"
 	"go.uber.org/fx"
 )
@@ -8,6 +10,10 @@ import (
 var ServiceFxOpt = fx.Options(
 	fx.Provide(
 		// user service
+		fx.Annotate(
+			base64.NewGenerator,
+			fx.As(new(secret.Generator)),
+		),
 		fx.Annotate(
 			service.NewJwtUserService,
 			fx.As(new(service.UserService)),

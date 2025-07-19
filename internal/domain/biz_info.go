@@ -8,6 +8,9 @@ type BizInfo struct {
 	BizName      string `json:"biz_name"`
 	Contact      string `json:"contact"`
 	ContactEmail string `json:"contact_email"`
+	CreatorId    uint64 `json:"creator_id"`
 	CreatedAt    int64  `json:"created_at"`
 	UpdatedAt    int64  `json:"updated_at"`
+
+	Creator SysUser `json:"creator"`
 }

@@ -64,8 +64,9 @@ func (s *JwtUserService) LoginWithType(
 	}
 
 	return ginpkg.AuthUser{
-		Uid:      u.Id,
 		Sid:      uuid.NewString(),
+		Bid:      u.BizId,
+		Uid:      u.Id,
 		UserType: u.UserType,
 	}, nil
 }

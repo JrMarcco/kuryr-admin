@@ -8,6 +8,7 @@ import (
 	"github.com/JrMarcco/kuryr-admin/internal/service"
 	"github.com/JrMarcco/kuryr-admin/internal/web/jwt"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 var _ ginpkg.RouteRegistry = (*UserHandler)(nil)
@@ -15,6 +16,7 @@ var _ ginpkg.RouteRegistry = (*UserHandler)(nil)
 type UserHandler struct {
 	jwt.Handler
 	userSvc service.UserService
+	logger  *zap.Logger
 }
 
 func (h *UserHandler) RegisterRoutes(engine *gin.Engine) {
@@ -26,10 +28,10 @@ func (h *UserHandler) RegisterRoutes(engine *gin.Engine) {
 }
 
 type loginReq struct {
-	AccountType string `json:"accountType"`
-	VerifyType  string `json:"verifyType"`
 	Account     string `json:"account"`
+	AccountType string `json:"account_type"`
 	Credential  string `json:"credential"`
+	VerifyType  string `json:"verify_type"`
 }
 
 type refreshTokenReq struct {
@@ -135,21 +137,21 @@ func (h *UserHandler) Logout(ctx *gin.Context) (ginpkg.R, error) {
 		}, nil
 	}
 
-	if err := h.ClearSession(ctx, au.Sid); err != nil {
-		return ginpkg.R{
-			Code: http.StatusInternalServerError,
-			Msg:  err.Error(),
-		}, err
-	}
+	go func() {
+		if err := h.ClearSession(ctx, au.Sid); err != nil {
+			h.logger.Error("failed to clear session", zap.Error(err))
+		}
+	}()
 	return ginpkg.R{
 		Code: http.StatusOK,
 		Msg:  "logged out",
 	}, nil
 }
 
-func NewUserHandler(handler jwt.Handler, userSvc service.UserService) *UserHandler {
+func NewUserHandler(handler jwt.Handler, userSvc service.UserService, logger *zap.Logger) *UserHandler {
 	return &UserHandler{
 		Handler: handler,
 		userSvc: userSvc,
+		logger:  logger,
 	}
 }
