@@ -92,7 +92,7 @@ func (r *DefaultBizRepo) toDomain(entity dao.BizInfo) domain.BizInfo {
 	return domain.BizInfo{
 		Id:           entity.Id,
 		BizKey:       entity.BizKey,
-		BizSecret:    entity.BizSecret,
+		BizSecret:    entity.BizSecret[:3] + "****" + entity.BizSecret[len(entity.BizSecret)-3:],
 		BizName:      entity.BizName,
 		Contact:      entity.Contact,
 		ContactEmail: entity.ContactEmail,

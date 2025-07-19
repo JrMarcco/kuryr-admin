@@ -34,10 +34,6 @@ type loginReq struct {
 	VerifyType  string `json:"verify_type"`
 }
 
-type refreshTokenReq struct {
-	RefreshToken string `json:"refresh_token"`
-}
-
 type tokenResp struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
@@ -76,6 +72,10 @@ func (h *UserHandler) Login(ctx *gin.Context, req loginReq) (ginpkg.R, error) {
 			RefreshToken: st,
 		},
 	}, nil
+}
+
+type refreshTokenReq struct {
+	RefreshToken string `json:"refresh_token"`
 }
 
 func (h *UserHandler) RefreshToken(ctx *gin.Context, req refreshTokenReq) (ginpkg.R, error) {
