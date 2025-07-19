@@ -1,10 +1,10 @@
 package ioc
 
 import (
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -19,7 +19,7 @@ func InitDB() *gorm.DB {
 		panic(err)
 	}
 
-	db, err := gorm.Open(mysql.Open(cfg.DSN), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(cfg.DSN), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}

@@ -5,7 +5,8 @@ app:
   addr: ":8080"
 
 db:
-  dsn: "jrmarcco:<passwd>@tcp(192.168.3.3:3306)/kuryr_admin?charset=utf8mb4&collation=utf8mb4_general_ci&parseTime=True&loc=Local&timeout=1s&readTimeout=3s&writeTimeout=3s&multiStatements=true&interpolateParams=true"
+  # sslmode=disable 用于开发环境，线上一般推荐使用 sslmode=require / sslmode=verify-ca(更高安全性) / sslmode=verify-full (最高安全性)
+  dsn: "postgres://jrmarcco:%3Cpasswd%3E@192.168.3.3:5432/kuryr_admin?sslmode=disable&connect_timeout=1&statement_timeout=3000&idle_in_transaction_session_timeout=3000"
 
 redis:
   addr: 192.168.3.3:6379
