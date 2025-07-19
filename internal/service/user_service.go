@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/JrMarcco/easy-kit/jwt"
+	"github.com/JrMarcco/kuryr-admin/internal/domain"
 	"github.com/JrMarcco/kuryr-admin/internal/errs"
 	ginpkg "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/JrMarcco/kuryr-admin/internal/repository"
@@ -11,8 +12,16 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const (
+	accountTypeEmail  = "email"
+	accountTypeMobile = "mobile"
+
+	verifyTypePasswd = "passwd"
+	verifyTypeCode   = "code"
+)
+
 type UserService interface {
-	Login(ctx context.Context, username string, password string) (ginpkg.AuthUser, error)
+	LoginWithType(ctx context.Context, account string, credential string, accountType, VerifyType string) (ginpkg.AuthUser, error)
 	GenerateToken(ctx context.Context, au ginpkg.AuthUser) (accessToken, refreshToken string, err error)
 	VerifyRefreshToken(ctx context.Context, token string) (ginpkg.AuthUser, error)
 }
@@ -26,14 +35,32 @@ type JwtUserService struct {
 	stManager jwt.Manager[ginpkg.AuthUser] // refresh token manager
 }
 
-func (s *JwtUserService) Login(ctx context.Context, username string, password string) (ginpkg.AuthUser, error) {
-	u, err := s.userRepo.FindByUsername(ctx, username)
+func (s *JwtUserService) LoginWithType(
+	ctx context.Context, account string, credential string, accountType, VerifyType string,
+) (ginpkg.AuthUser, error) {
+	var (
+		u   domain.SysUser
+		err error
+	)
+	switch accountType {
+	case accountTypeEmail:
+		u, err = s.userRepo.FindByEmail(ctx, account)
+	default:
+		return ginpkg.AuthUser{}, errs.ErrInvalidAccountType
+	}
+
 	if err != nil {
 		return ginpkg.AuthUser{}, errs.ErrInvalidUser
 	}
 
-	if err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)); err != nil {
-		return ginpkg.AuthUser{}, errs.ErrInvalidUser
+	switch VerifyType {
+	case verifyTypePasswd:
+		err = s.verifyPasswd(u, credential)
+	default:
+		return ginpkg.AuthUser{}, errs.ErrInvalidVerifyType
+	}
+	if err != nil {
+		return ginpkg.AuthUser{}, err
 	}
 
 	return ginpkg.AuthUser{
@@ -41,6 +68,13 @@ func (s *JwtUserService) Login(ctx context.Context, username string, password st
 		Sid:      uuid.NewString(),
 		UserType: u.UserType,
 	}, nil
+}
+
+func (s *JwtUserService) verifyPasswd(u domain.SysUser, credential string) error {
+	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(credential)); err != nil {
+		return errs.ErrInvalidUser
+	}
+	return nil
 }
 
 func (s *JwtUserService) GenerateToken(_ context.Context, au ginpkg.AuthUser) (accessToken, refreshToken string, err error) {

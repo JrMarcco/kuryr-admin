@@ -10,9 +10,9 @@ const (
 
 type SysUser struct {
 	Id        uint64
-	Username  string
-	Password  string
 	Email     string
+	Password  string
+	RealName  string
 	UserType  UserType
 	BizInfo   BizInfo
 	CreatedAt int64

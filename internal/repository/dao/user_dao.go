@@ -8,9 +8,9 @@ import (
 
 type SysUser struct {
 	Id        uint64
-	Username  string
-	Password  string
 	Email     string
+	Password  string
+	RealName  string
 	UserType  string
 	BizId     uint64
 	CreatedAt int64
@@ -22,7 +22,7 @@ func (su SysUser) TableName() string {
 }
 
 type UserDAO interface {
-	FindByUsername(ctx context.Context, username string) (SysUser, error)
+	FindByEmail(ctx context.Context, email string) (SysUser, error)
 }
 
 var _ UserDAO = (*DefaultUserDAO)(nil)
@@ -31,10 +31,10 @@ type DefaultUserDAO struct {
 	db *gorm.DB
 }
 
-func (d *DefaultUserDAO) FindByUsername(ctx context.Context, username string) (SysUser, error) {
+func (d *DefaultUserDAO) FindByEmail(ctx context.Context, email string) (SysUser, error) {
 	var su SysUser
 	err := d.db.WithContext(ctx).Model(&SysUser{}).
-		Where("username = ?", username).
+		Where("email = ?", email).
 		First(&su).Error
 	return su, err
 }

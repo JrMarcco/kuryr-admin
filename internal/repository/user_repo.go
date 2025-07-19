@@ -8,7 +8,7 @@ import (
 )
 
 type UserRepo interface {
-	FindByUsername(ctx context.Context, username string) (domain.SysUser, error)
+	FindByEmail(ctx context.Context, email string) (domain.SysUser, error)
 }
 
 var _ UserRepo = (*DefaultUserRepo)(nil)
@@ -17,8 +17,8 @@ type DefaultUserRepo struct {
 	userDAO dao.UserDAO
 }
 
-func (r *DefaultUserRepo) FindByUsername(ctx context.Context, username string) (domain.SysUser, error) {
-	entity, err := r.userDAO.FindByUsername(ctx, username)
+func (r *DefaultUserRepo) FindByEmail(ctx context.Context, email string) (domain.SysUser, error) {
+	entity, err := r.userDAO.FindByEmail(ctx, email)
 	if err != nil {
 		return domain.SysUser{}, err
 	}
@@ -28,9 +28,9 @@ func (r *DefaultUserRepo) FindByUsername(ctx context.Context, username string) (
 func (r *DefaultUserRepo) toDomain(entity dao.SysUser) domain.SysUser {
 	return domain.SysUser{
 		Id:        entity.Id,
-		Username:  entity.Username,
-		Password:  entity.Password,
 		Email:     entity.Email,
+		Password:  entity.Password,
+		RealName:  entity.RealName,
 		UserType:  domain.UserType(entity.UserType),
 		CreatedAt: entity.CreatedAt,
 		UpdatedAt: entity.UpdatedAt,

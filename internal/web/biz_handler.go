@@ -12,6 +12,7 @@ import (
 
 var _ ginpkg.RouteRegistry = (*BizHandler)(nil)
 
+// BizHandler 业务方信息 web handler。
 type BizHandler struct {
 	bizSvc service.BizService
 }
@@ -19,7 +20,19 @@ type BizHandler struct {
 func (h *BizHandler) RegisterRoutes(engine *gin.Engine) {
 	v1 := engine.Group("/api/v1/biz")
 
+	v1.Handle(http.MethodPost, "/create", ginpkg.QU[createBizReq](h.Create))
 	v1.Handle(http.MethodGet, "/list", ginpkg.QU[listBizReq](h.List))
+}
+
+type createBizReq struct {
+	BizName string `json:"biz_name"`
+	BizKey  string `json:"biz_key"`
+}
+
+// Create 新建业务方信息。
+func (h *BizHandler) Create(ctx *gin.Context, req createBizReq, au ginpkg.AuthUser) (ginpkg.R, error) {
+	// TODO implement me
+	panic("implement me")
 }
 
 type listBizReq struct {
@@ -32,6 +45,7 @@ type listBizResp struct {
 	Content []domain.BizInfo `json:"content"`
 }
 
+// List 分页查询业务方信息
 func (h *BizHandler) List(ctx *gin.Context, req listBizReq, au ginpkg.AuthUser) (ginpkg.R, error) {
 	var (
 		list  []domain.BizInfo

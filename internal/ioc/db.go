@@ -1,6 +1,7 @@
 package ioc
 
 import (
+	"github.com/JrMarcco/kuryr-admin/internal/pkg/snowflake"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
@@ -8,7 +9,10 @@ import (
 	"gorm.io/gorm"
 )
 
-var DBFxOpt = fx.Provide(InitDB)
+var DBFxOpt = fx.Provide(
+	InitDB,
+	snowflake.NewGenerator,
+)
 
 func InitDB() *gorm.DB {
 	type config struct {

@@ -45,12 +45,14 @@ func (r *DefaultBizRepo) FindById(ctx context.Context, id uint64) (domain.BizInf
 
 func (r *DefaultBizRepo) toDomain(entity dao.BizInfo) domain.BizInfo {
 	return domain.BizInfo{
-		Id:        entity.Id,
-		BizKey:    entity.BizKey,
-		BizSecret: entity.BizSecret,
-		BizName:   entity.BizName,
-		CreatedAt: entity.CreatedAt,
-		UpdatedAt: entity.UpdatedAt,
+		Id:           entity.Id,
+		BizKey:       entity.BizKey,
+		BizSecret:    entity.BizSecret,
+		BizName:      entity.BizName,
+		Contact:      entity.Contact,
+		ContactEmail: entity.ContactEmail,
+		CreatedAt:    entity.CreatedAt,
+		UpdatedAt:    entity.UpdatedAt,
 	}
 }
 

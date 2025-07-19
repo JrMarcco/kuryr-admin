@@ -7,12 +7,14 @@ import (
 )
 
 type BizInfo struct {
-	Id        uint64
-	BizKey    string
-	BizSecret string
-	BizName   string
-	CreatedAt int64
-	UpdatedAt int64
+	Id           uint64
+	BizKey       string
+	BizSecret    string
+	BizName      string
+	Contact      string
+	ContactEmail string
+	CreatedAt    int64
+	UpdatedAt    int64
 }
 
 func (bi BizInfo) TableName() string {

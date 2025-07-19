@@ -26,8 +26,10 @@ func (h *UserHandler) RegisterRoutes(engine *gin.Engine) {
 }
 
 type loginReq struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	AccountType string `json:"accountType"`
+	VerifyType  string `json:"verifyType"`
+	Account     string `json:"account"`
+	Credential  string `json:"credential"`
 }
 
 type refreshTokenReq struct {
@@ -40,7 +42,7 @@ type tokenResp struct {
 }
 
 func (h *UserHandler) Login(ctx *gin.Context, req loginReq) (ginpkg.R, error) {
-	au, err := h.userSvc.Login(ctx, req.Username, req.Password)
+	au, err := h.userSvc.LoginWithType(ctx, req.Account, req.Credential, req.AccountType, req.VerifyType)
 	if err != nil {
 		return ginpkg.R{
 			Code: http.StatusUnauthorized,
@@ -117,7 +119,7 @@ func (h *UserHandler) RefreshToken(ctx *gin.Context, req refreshTokenReq) (ginpk
 }
 
 func (h *UserHandler) Logout(ctx *gin.Context) (ginpkg.R, error) {
-	userVal, ok := ctx.Get(ginpkg.HeaderNameAccessToken)
+	userVal, ok := ctx.Get(ginpkg.ContextKeyAuthUser)
 	if !ok {
 		return ginpkg.R{
 			Code: http.StatusUnauthorized,
