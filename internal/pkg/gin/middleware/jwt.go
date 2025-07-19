@@ -2,21 +2,20 @@ package middleware
 
 import (
 	"net/http"
-	"strings"
 
 	eawsyjwt "github.com/JrMarcco/easy-kit/jwt"
 	"github.com/JrMarcco/easy-kit/set"
 	ginpkg "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
-	"github.com/JrMarcco/kuryr-admin/internal/service/session"
+	ijwt "github.com/JrMarcco/kuryr-admin/internal/web/jwt"
 	"github.com/gin-gonic/gin"
 )
 
 var _ Builder = (*JwtBuilder)(nil)
 
 type JwtBuilder struct {
-	sessionSvc session.Service
-	atManager  eawsyjwt.Manager[ginpkg.AuthUser] // 这里是 access token manager
-	ignores    set.Set[string]
+	ijwt.Handler
+	atManager eawsyjwt.Manager[ginpkg.AuthUser] // 这里是 access token manager
+	ignores   set.Set[string]
 }
 
 func (b *JwtBuilder) Build() gin.HandlerFunc {
@@ -26,7 +25,7 @@ func (b *JwtBuilder) Build() gin.HandlerFunc {
 			return
 		}
 
-		token := b.ExtractToken(ctx)
+		token := b.ExtractAccessToken(ctx)
 		if token == "" {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
@@ -54,20 +53,12 @@ func (b *JwtBuilder) Build() gin.HandlerFunc {
 	}
 }
 
-func (b *JwtBuilder) ExtractToken(ctx *gin.Context) string {
-	token := ctx.GetHeader(ginpkg.HeaderNameAccessToken)
-	if token != "" {
-		return strings.TrimPrefix(token, "Bearer ")
-	}
-	return ""
-}
-
 func NewJwtBuilder(
-	sessionSvc session.Service, atManager eawsyjwt.Manager[ginpkg.AuthUser], ignores set.Set[string],
+	handler ijwt.Handler, atManager eawsyjwt.Manager[ginpkg.AuthUser], ignores set.Set[string],
 ) *JwtBuilder {
 	return &JwtBuilder{
-		sessionSvc: sessionSvc,
-		atManager:  atManager,
-		ignores:    ignores,
+		Handler:   handler,
+		atManager: atManager,
+		ignores:   ignores,
 	}
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/JrMarcco/easy-kit/set"
 	ginpkg "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/JrMarcco/kuryr-admin/internal/pkg/gin/middleware"
-	"github.com/JrMarcco/kuryr-admin/internal/service/session"
+	ijwt "github.com/JrMarcco/kuryr-admin/internal/web/jwt"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
 )
@@ -57,7 +57,7 @@ func InitCorsBuilder() *middleware.CorsBuilder {
 	return builder
 }
 
-func InitJwtBuilder(sessionSvc session.Service, jwtManager easyjwt.Manager[ginpkg.AuthUser]) *middleware.JwtBuilder {
+func InitJwtBuilder(handler ijwt.Handler, jwtManager easyjwt.Manager[ginpkg.AuthUser]) *middleware.JwtBuilder {
 	var ignores []string
 	if err := viper.UnmarshalKey("ignores", &ignores); err != nil {
 		panic(err)
@@ -70,7 +70,7 @@ func InitJwtBuilder(sessionSvc session.Service, jwtManager easyjwt.Manager[ginpk
 	for _, ignore := range ignores {
 		ts.Add(ignore)
 	}
-	return middleware.NewJwtBuilder(sessionSvc, jwtManager, ts)
+	return middleware.NewJwtBuilder(handler, jwtManager, ts)
 }
 
 func InitAccessLogBuilder() *middleware.AccessLogBuilder {

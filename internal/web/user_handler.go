@@ -6,15 +6,15 @@ import (
 
 	ginpkg "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/JrMarcco/kuryr-admin/internal/service"
-	"github.com/JrMarcco/kuryr-admin/internal/service/session"
+	"github.com/JrMarcco/kuryr-admin/internal/web/jwt"
 	"github.com/gin-gonic/gin"
 )
 
 var _ ginpkg.RouteRegistry = (*UserHandler)(nil)
 
 type UserHandler struct {
-	userSvc    service.UserService
-	sessionSvc session.Service
+	jwt.Handler
+	userSvc service.UserService
 }
 
 func (h *UserHandler) RegisterRoutes(engine *gin.Engine) {
@@ -49,7 +49,7 @@ func (h *UserHandler) Login(ctx *gin.Context, req loginReq) (ginpkg.R, error) {
 	}
 
 	// 创建 session
-	err = h.sessionSvc.Create(ctx, au.Sid, au.Uid)
+	err = h.CreateSession(ctx, au.Sid, au.Uid)
 	if err != nil {
 		return ginpkg.R{
 			Code: http.StatusInternalServerError,
@@ -84,7 +84,7 @@ func (h *UserHandler) RefreshToken(ctx *gin.Context, req refreshTokenReq) (ginpk
 	}
 
 	// 校验 session
-	err = h.sessionSvc.Check(ctx, au.Sid)
+	err = h.CheckSession(ctx, au.Sid, au.Uid)
 	if err != nil {
 		return ginpkg.R{
 			Code: http.StatusUnauthorized,
@@ -93,7 +93,7 @@ func (h *UserHandler) RefreshToken(ctx *gin.Context, req refreshTokenReq) (ginpk
 	}
 
 	// 刷新 session 的过期时间
-	err = h.sessionSvc.Create(ctx, au.Sid, au.Uid)
+	err = h.RefreshSession(ctx, au.Sid)
 	if err != nil {
 		// 刷新失败通常不应该中断整个流程，但需要记录日志
 		log.Printf("failed to refresh session: %v", err)
@@ -133,7 +133,7 @@ func (h *UserHandler) Logout(ctx *gin.Context) (ginpkg.R, error) {
 		}, nil
 	}
 
-	if err := h.sessionSvc.Clear(ctx, au.Sid); err != nil {
+	if err := h.ClearSession(ctx, au.Sid); err != nil {
 		return ginpkg.R{
 			Code: http.StatusInternalServerError,
 			Msg:  err.Error(),
@@ -145,9 +145,9 @@ func (h *UserHandler) Logout(ctx *gin.Context) (ginpkg.R, error) {
 	}, nil
 }
 
-func NewUserHandler(userSvc service.UserService, sessionSvc session.Service) *UserHandler {
+func NewUserHandler(handler jwt.Handler, userSvc service.UserService) *UserHandler {
 	return &UserHandler{
-		userSvc:    userSvc,
-		sessionSvc: sessionSvc,
+		Handler: handler,
+		userSvc: userSvc,
 	}
 }

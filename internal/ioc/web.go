@@ -1,13 +1,24 @@
 package ioc
 
 import (
+	"time"
+
 	ginpkg "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/JrMarcco/kuryr-admin/internal/web"
+	ijwt "github.com/JrMarcco/kuryr-admin/internal/web/jwt"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
+	"github.com/spf13/viper"
 	"go.uber.org/fx"
 )
 
 var HandlerFxOpt = fx.Provide(
+	// redis jwt handler
+	fx.Annotate(
+		InitRedisJwtHandler,
+		fx.As(new(ijwt.Handler)),
+	),
+
 	// user handler
 	fx.Annotate(
 		web.NewUserHandler,
@@ -39,4 +50,12 @@ func RegisterRoutes(_ *App, engine *gin.Engine, registries []ginpkg.RouteRegistr
 	for _, registry := range registries {
 		registry.RegisterRoutes(engine)
 	}
+}
+
+func InitRedisJwtHandler(rc redis.Cmdable) ijwt.Handler {
+	var expiration int
+	if err := viper.UnmarshalKey("session.expiration", &expiration); err != nil {
+		panic(err)
+	}
+	return ijwt.NewRedisHandler(rc, time.Duration(expiration)*time.Second)
 }
