@@ -10,13 +10,9 @@ import (
 	"go.uber.org/zap/exp/zapslog"
 )
 
-var (
-	LoggerFxOpt    = fx.Provide(InitLogger)
-	LoggerFxInvoke = fx.Invoke(LoggerLifecycle)
-	SlogFxInvoke   = fx.Invoke(InitSlog)
-)
+var LoggerFxOpt = fx.Provide(InitLogger)
 
-func InitLogger() *zap.Logger {
+func InitLogger(lc fx.Lifecycle) *zap.Logger {
 	type config struct {
 		Env string `mapstructure:"env"`
 	}
@@ -37,21 +33,18 @@ func InitLogger() *zap.Logger {
 	if err != nil {
 		panic(err)
 	}
-	return zapLogger
-}
 
-// LoggerLifecycle 注册 zap.Logger 生命周期
-// 在程序退出时 flush buffer 防止日志丢失
-func LoggerLifecycle(lc fx.Lifecycle, logger *zap.Logger) {
+	// 初始化 slog
+	slog.SetDefault(slog.New(zapslog.NewHandler(zapLogger.Core())))
+
+	// 注册生命周期 hook
 	lc.Append(fx.Hook{
+		// 程序停止时 flush buffer 防止日志丢失
 		OnStop: func(ctx context.Context) error {
-			_ = logger.Sync()
+			_ = zapLogger.Sync()
 			return nil
 		},
 	})
-}
 
-// InitSlog 设置全局 slog 默认使用 zap.Logger 实例。
-func InitSlog(logger *zap.Logger) {
-	slog.SetDefault(slog.New(zapslog.NewHandler(logger.Core())))
+	return zapLogger
 }

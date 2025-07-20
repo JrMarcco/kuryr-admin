@@ -36,12 +36,8 @@ func main() {
 			return &fxevent.ZapLogger{Logger: logger}
 		}),
 
-		// 初始化 slog
-		ioc.SlogFxInvoke,
-		// 注册 gin 路由，需要再 app 启动前完成
+		// 注册 gin 路由，需要在 app 启动前完成
 		ioc.HandlerFxInvoke,
-		// 注册 zap logger lifecycle 确保日志缓冲区被刷新
-		ioc.LoggerFxInvoke,
 		// 注册 app lifecycle
 		ioc.AppFxInvoke,
 	).Run()
