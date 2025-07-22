@@ -40,3 +40,25 @@ ignores:
 
 session:
   expiration: 604800 # 推荐和 refresh token 的过期时间一致
+
+etcd:
+  endpoints:
+    - "192.168.3.3:52379"
+    - "192.168.3.3:52381"
+    - "192.168.3.3:52383"
+  username: "root"
+  password: "<root_passwd>"
+  dial_timeout: 5000            # 单位：毫秒
+  tls:
+    enabled: true
+    cert_file: "etc/etcd-certs/client.pem"
+    key_file: "etc/etcd-certs/client-key.pem"
+    ca_file: "etc/etcd-certs/ca.pem"
+    insecure_skip_verify: false
+
+registry:
+  lease_ttl: 30 # 单位：秒，这里和 etcd api 保持一直所以是秒单位
+
+load_balance:
+  name: "read_write_weight"
+  timeout: 1000 # 单位：毫秒

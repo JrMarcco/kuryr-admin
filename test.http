@@ -3,8 +3,10 @@ POST http://localhost:8080/api/v1/user/login
 Content-Type: application/json
 
 {
-    "username": "jrmarcco",
-    "password": "<passwd>"
+    "account": "jrmarcco@gmail.com",
+    "credential": "<passwd>",
+    "account_type": "email",
+    "verify_type": "passwd"
 }
 
 > {%
@@ -27,3 +29,13 @@ Content-Type: application/json
 #### List Biz
 GET http://localhost:8080/api/v1/biz/list?offset=0&limit=10
 X-ACCESS-TOKEN: {{access_token}}
+
+
+
+#### Save Biz Config
+POST http://localhost:8080/api/v1/biz_config/create
+X-ACCESS-TOKEN: {{access_token}}
+
+{
+
+}

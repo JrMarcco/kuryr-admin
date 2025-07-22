@@ -6,12 +6,12 @@ import (
 
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
 	"github.com/JrMarcco/kuryr-admin/internal/errs"
-	ginpkg "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
+	pkggin "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/JrMarcco/kuryr-admin/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
-var _ ginpkg.RouteRegistry = (*BizHandler)(nil)
+var _ pkggin.RouteRegistry = (*BizHandler)(nil)
 
 // BizHandler 业务方信息 web handler。
 type BizHandler struct {
@@ -21,8 +21,8 @@ type BizHandler struct {
 func (h *BizHandler) RegisterRoutes(engine *gin.Engine) {
 	v1 := engine.Group("/api/v1/biz")
 
-	v1.Handle(http.MethodPost, "/create", ginpkg.BU[createBizReq](h.Create))
-	v1.Handle(http.MethodGet, "/list", ginpkg.QU[listBizReq](h.List))
+	v1.Handle(http.MethodPost, "/create", pkggin.BU[createBizReq](h.Create))
+	v1.Handle(http.MethodGet, "/list", pkggin.QU[listBizReq](h.List))
 }
 
 type createBizReq struct {
@@ -33,7 +33,7 @@ type createBizReq struct {
 }
 
 // Create 新建业务方信息。
-func (h *BizHandler) Create(ctx *gin.Context, req createBizReq, au ginpkg.AuthUser) (ginpkg.R, error) {
+func (h *BizHandler) Create(ctx *gin.Context, req createBizReq, au pkggin.AuthUser) (pkggin.R, error) {
 	bi := domain.BizInfo{
 		BizKey:       req.BizKey,
 		BizName:      req.BizName,
@@ -43,12 +43,12 @@ func (h *BizHandler) Create(ctx *gin.Context, req createBizReq, au ginpkg.AuthUs
 	}
 	bi, err := h.svc.Create(ctx, bi)
 	if err != nil {
-		return ginpkg.R{
+		return pkggin.R{
 			Code: http.StatusInternalServerError,
 			Msg:  err.Error(),
 		}, err
 	}
-	return ginpkg.R{
+	return pkggin.R{
 		Code: http.StatusOK,
 		Data: strconv.FormatUint(bi.Id, 10),
 	}, nil
@@ -65,7 +65,7 @@ type listBizResp struct {
 }
 
 // List 分页查询业务方信息
-func (h *BizHandler) List(ctx *gin.Context, req listBizReq, au ginpkg.AuthUser) (ginpkg.R, error) {
+func (h *BizHandler) List(ctx *gin.Context, req listBizReq, au pkggin.AuthUser) (pkggin.R, error) {
 	var (
 		list  []domain.BizInfo
 		total int64
@@ -84,13 +84,13 @@ func (h *BizHandler) List(ctx *gin.Context, req listBizReq, au ginpkg.AuthUser) 
 		list = append(list, bizInfo)
 		total = 1
 	default:
-		return ginpkg.R{}, errs.ErrUnknownUser
+		return pkggin.R{}, errs.ErrUnknownUser
 	}
 
 	if err != nil {
-		return ginpkg.R{}, err
+		return pkggin.R{}, err
 	}
-	return ginpkg.R{
+	return pkggin.R{
 		Code: http.StatusOK,
 		Data: listBizResp{
 			Total:   total,

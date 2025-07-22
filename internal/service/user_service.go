@@ -6,7 +6,7 @@ import (
 	"github.com/JrMarcco/easy-kit/jwt"
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
 	"github.com/JrMarcco/kuryr-admin/internal/errs"
-	ginpkg "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
+	pkggin "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/JrMarcco/kuryr-admin/internal/repository"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -21,9 +21,9 @@ const (
 )
 
 type UserService interface {
-	LoginWithType(ctx context.Context, account string, credential string, accountType, VerifyType string) (ginpkg.AuthUser, error)
-	GenerateToken(ctx context.Context, au ginpkg.AuthUser) (accessToken, refreshToken string, err error)
-	VerifyRefreshToken(ctx context.Context, token string) (ginpkg.AuthUser, error)
+	LoginWithType(ctx context.Context, account string, credential string, accountType, VerifyType string) (pkggin.AuthUser, error)
+	GenerateToken(ctx context.Context, au pkggin.AuthUser) (accessToken, refreshToken string, err error)
+	VerifyRefreshToken(ctx context.Context, token string) (pkggin.AuthUser, error)
 }
 
 var _ UserService = (*JwtUserService)(nil)
@@ -31,13 +31,13 @@ var _ UserService = (*JwtUserService)(nil)
 type JwtUserService struct {
 	repo repository.UserRepo
 
-	atManager jwt.Manager[ginpkg.AuthUser] // access token manager
-	stManager jwt.Manager[ginpkg.AuthUser] // refresh token manager
+	atManager jwt.Manager[pkggin.AuthUser] // access token manager
+	stManager jwt.Manager[pkggin.AuthUser] // refresh token manager
 }
 
 func (s *JwtUserService) LoginWithType(
 	ctx context.Context, account string, credential string, accountType, VerifyType string,
-) (ginpkg.AuthUser, error) {
+) (pkggin.AuthUser, error) {
 	var (
 		u   domain.SysUser
 		err error
@@ -46,24 +46,24 @@ func (s *JwtUserService) LoginWithType(
 	case accountTypeEmail:
 		u, err = s.repo.FindByEmail(ctx, account)
 	default:
-		return ginpkg.AuthUser{}, errs.ErrInvalidAccountType
+		return pkggin.AuthUser{}, errs.ErrInvalidAccountType
 	}
 
 	if err != nil {
-		return ginpkg.AuthUser{}, errs.ErrInvalidUser
+		return pkggin.AuthUser{}, errs.ErrInvalidUser
 	}
 
 	switch VerifyType {
 	case verifyTypePasswd:
 		err = s.verifyPasswd(u, credential)
 	default:
-		return ginpkg.AuthUser{}, errs.ErrInvalidVerifyType
+		return pkggin.AuthUser{}, errs.ErrInvalidVerifyType
 	}
 	if err != nil {
-		return ginpkg.AuthUser{}, err
+		return pkggin.AuthUser{}, err
 	}
 
-	return ginpkg.AuthUser{
+	return pkggin.AuthUser{
 		Sid:      uuid.NewString(),
 		Bid:      u.BizId,
 		Uid:      u.Id,
@@ -78,7 +78,7 @@ func (s *JwtUserService) verifyPasswd(u domain.SysUser, credential string) error
 	return nil
 }
 
-func (s *JwtUserService) GenerateToken(_ context.Context, au ginpkg.AuthUser) (accessToken, refreshToken string, err error) {
+func (s *JwtUserService) GenerateToken(_ context.Context, au pkggin.AuthUser) (accessToken, refreshToken string, err error) {
 	// access token
 	at, err := s.atManager.Encrypt(au)
 	if err != nil {
@@ -92,16 +92,16 @@ func (s *JwtUserService) GenerateToken(_ context.Context, au ginpkg.AuthUser) (a
 	return at, rt, nil
 }
 
-func (s *JwtUserService) VerifyRefreshToken(_ context.Context, token string) (ginpkg.AuthUser, error) {
+func (s *JwtUserService) VerifyRefreshToken(_ context.Context, token string) (pkggin.AuthUser, error) {
 	decrypt, err := s.stManager.Decrypt(token)
 	if err != nil {
-		return ginpkg.AuthUser{}, err
+		return pkggin.AuthUser{}, err
 	}
 	return decrypt.Data, nil
 }
 
 func NewJwtUserService(
-	repo repository.UserRepo, atManager, stManager jwt.Manager[ginpkg.AuthUser],
+	repo repository.UserRepo, atManager, stManager jwt.Manager[pkggin.AuthUser],
 ) *JwtUserService {
 	return &JwtUserService{
 		repo:      repo,

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	ginpkg "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
+	pkggin "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 )
@@ -19,7 +19,7 @@ type RedisHandler struct {
 }
 
 func (h *RedisHandler) ExtractAccessToken(ctx *gin.Context) string {
-	token := ctx.GetHeader(ginpkg.HeaderNameAccessToken)
+	token := ctx.GetHeader(pkggin.HeaderNameAccessToken)
 	if token != "" {
 		return strings.TrimPrefix(token, "Bearer ")
 	}

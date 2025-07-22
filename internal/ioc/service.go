@@ -19,10 +19,17 @@ var ServiceFxOpt = fx.Options(
 			fx.As(new(service.UserService)),
 			fx.ParamTags(``, `name:"access-token-manager"`, `name:"refresh-token-manager"`),
 		),
+
 		// biz service
 		fx.Annotate(
-			service.NewBizService,
+			service.NewDefaultBizService,
 			fx.As(new(service.BizService)),
+		),
+
+		// biz config service
+		fx.Annotate(
+			service.NewDefaultBizConfigService,
+			fx.As(new(service.BizConfigService)),
 		),
 	),
 )

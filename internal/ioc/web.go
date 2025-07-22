@@ -3,7 +3,7 @@ package ioc
 import (
 	"time"
 
-	ginpkg "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
+	pkggin "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/JrMarcco/kuryr-admin/internal/web"
 	ijwt "github.com/JrMarcco/kuryr-admin/internal/web/jwt"
 	"github.com/gin-gonic/gin"
@@ -22,13 +22,20 @@ var HandlerFxOpt = fx.Provide(
 	// user handler
 	fx.Annotate(
 		web.NewUserHandler,
-		fx.As(new(ginpkg.RouteRegistry)),
+		fx.As(new(pkggin.RouteRegistry)),
 		fx.ResultTags(`group:"handler"`),
 	),
 	// biz handler
 	fx.Annotate(
 		web.NewBizHandler,
-		fx.As(new(ginpkg.RouteRegistry)),
+		fx.As(new(pkggin.RouteRegistry)),
+		fx.ResultTags(`group:"handler"`),
+	),
+
+	// biz config handler
+	fx.Annotate(
+		web.NewBizConfigHandler,
+		fx.As(new(pkggin.RouteRegistry)),
 		fx.ResultTags(`group:"handler"`),
 	),
 )
@@ -46,7 +53,7 @@ var HandlerFxInvoke = fx.Invoke(
 //	这里声明 ioc.App 是为了保证 fx 在 ioc.RegisterRoutes 之前完成 engine.Use(middlewares...) 。
 //	ioc.RegisterRoutes 在 engine.Use(middlewares...) 之前调用
 //	会导致这里注册的路由“错过”这里注册的 middleware ，即导致 middleware 失效。
-func RegisterRoutes(_ *App, engine *gin.Engine, registries []ginpkg.RouteRegistry) {
+func RegisterRoutes(_ *App, engine *gin.Engine, registries []pkggin.RouteRegistry) {
 	for _, registry := range registries {
 		registry.RegisterRoutes(engine)
 	}

@@ -15,10 +15,16 @@ func main() {
 	fx.New(
 		// 初始化 zap.Logger
 		ioc.LoggerFxOpt,
-		// 初始化 gorm.DB
-		ioc.DBFxOpt,
 		// 初始化 redis.Client
 		ioc.RedisFxOpt,
+		// 初始化 gorm.DB
+		ioc.DBFxOpt,
+		// 初始化 etcd
+		ioc.EtcdFxOpt,
+		// 初始化 grpc registry
+		ioc.RegistryFxOpt,
+		// 初始化 grpc client manager
+		ioc.GrpcClientFxOpt,
 		// 初始化 jwt manager
 		ioc.JwtManagerOpt,
 		// 初始化 middleware builder

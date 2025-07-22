@@ -8,7 +8,7 @@ import (
 
 	easyjwt "github.com/JrMarcco/easy-kit/jwt"
 	"github.com/JrMarcco/easy-kit/set"
-	ginpkg "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
+	pkggin "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/JrMarcco/kuryr-admin/internal/pkg/gin/middleware"
 	ijwt "github.com/JrMarcco/kuryr-admin/internal/web/jwt"
 	"github.com/spf13/viper"
@@ -36,7 +36,7 @@ func InitCorsBuilder() *middleware.CorsBuilder {
 	builder := middleware.NewCorsBuilder().
 		AllowCredentials(true).
 		AllowMethods([]string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions}).
-		AllowHeaders([]string{"Content-Length", "Content-Type", "Authorization", "Accept", "Origin", ginpkg.HeaderNameAccessToken}).
+		AllowHeaders([]string{"Content-Length", "Content-Type", "Authorization", "Accept", "Origin", pkggin.HeaderNameAccessToken}).
 		MaxAge(time.Duration(cfg.MaxAge) * time.Second).
 		AllowOriginFunc(func(origin string) bool {
 			if origin == "" {
@@ -57,7 +57,7 @@ func InitCorsBuilder() *middleware.CorsBuilder {
 	return builder
 }
 
-func InitJwtBuilder(handler ijwt.Handler, jwtManager easyjwt.Manager[ginpkg.AuthUser]) *middleware.JwtBuilder {
+func InitJwtBuilder(handler ijwt.Handler, jwtManager easyjwt.Manager[pkggin.AuthUser]) *middleware.JwtBuilder {
 	var ignores []string
 	if err := viper.UnmarshalKey("ignores", &ignores); err != nil {
 		panic(err)

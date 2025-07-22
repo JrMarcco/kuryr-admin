@@ -21,9 +21,11 @@ type BizService interface {
 var _ BizService = (*DefaultBizService)(nil)
 
 type DefaultBizService struct {
-	db        *gorm.DB // db 数据库连接，用于开启事务
-	repo      repository.BizRepo
-	userRepo  repository.UserRepo
+	db *gorm.DB // db 数据库连接，用于开启事务
+
+	repo     repository.BizRepo
+	userRepo repository.UserRepo
+
 	generator secret.Generator // biz secret 生成器
 }
 
@@ -84,7 +86,7 @@ func (s *DefaultBizService) FindById(ctx context.Context, id uint64) (domain.Biz
 	return s.repo.FindById(ctx, id)
 }
 
-func NewBizService(
+func NewDefaultBizService(
 	db *gorm.DB, bizRepo repository.BizRepo, userRepo repository.UserRepo, generator secret.Generator,
 ) *DefaultBizService {
 	return &DefaultBizService{
