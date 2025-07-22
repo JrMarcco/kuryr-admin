@@ -18,8 +18,8 @@ func InitRedis() *redis.Client {
 		Addr     string `mapstructure:"addr"`
 		Password string `mapstructure:"password"`
 	}
-	cfg := &config{}
-	if err := viper.UnmarshalKey("redis", cfg); err != nil {
+	cfg := config{}
+	if err := viper.UnmarshalKey("redis", &cfg); err != nil {
 		panic(err)
 	}
 	return redis.NewClient(&redis.Options{

@@ -18,8 +18,8 @@ func InitDB() *gorm.DB {
 	type config struct {
 		DSN string `mapstructure:"dsn"`
 	}
-	cfg := &config{}
-	if err := viper.UnmarshalKey("db", cfg); err != nil {
+	cfg := config{}
+	if err := viper.UnmarshalKey("db", &cfg); err != nil {
 		panic(err)
 	}
 

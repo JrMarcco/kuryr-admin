@@ -28,8 +28,8 @@ func InitCorsBuilder() *middleware.CorsBuilder {
 		MaxAge    int      `mapstructure:"max_age"`
 		Hostnames []string `mapstructure:"hostnames"`
 	}
-	cfg := &config{}
-	if err := viper.UnmarshalKey("cors", cfg); err != nil {
+	cfg := config{}
+	if err := viper.UnmarshalKey("cors", &cfg); err != nil {
 		panic(err)
 	}
 
