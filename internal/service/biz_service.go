@@ -22,7 +22,7 @@ var _ BizService = (*DefaultBizService)(nil)
 
 type DefaultBizService struct {
 	db        *gorm.DB // db 数据库连接，用于开启事务
-	bizRepo   repository.BizRepo
+	repo      repository.BizRepo
 	userRepo  repository.UserRepo
 	generator secret.Generator // biz secret 生成器
 }
@@ -38,7 +38,7 @@ func (s *DefaultBizService) Create(ctx context.Context, bi domain.BizInfo) (doma
 	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var innerErr error
 		var res domain.BizInfo
-		res, innerErr = s.bizRepo.CreateWithTx(ctx, tx, bi)
+		res, innerErr = s.repo.CreateWithTx(ctx, tx, bi)
 		if innerErr != nil {
 			return innerErr
 		}
@@ -73,15 +73,15 @@ func (s *DefaultBizService) Create(ctx context.Context, bi domain.BizInfo) (doma
 }
 
 func (s *DefaultBizService) Count(ctx context.Context) (int64, error) {
-	return s.bizRepo.Count(ctx)
+	return s.repo.Count(ctx)
 }
 
 func (s *DefaultBizService) List(ctx context.Context, offset, limit int) ([]domain.BizInfo, error) {
-	return s.bizRepo.List(ctx, offset, limit)
+	return s.repo.List(ctx, offset, limit)
 }
 
 func (s *DefaultBizService) FindById(ctx context.Context, id uint64) (domain.BizInfo, error) {
-	return s.bizRepo.FindById(ctx, id)
+	return s.repo.FindById(ctx, id)
 }
 
 func NewBizService(
@@ -89,7 +89,7 @@ func NewBizService(
 ) *DefaultBizService {
 	return &DefaultBizService{
 		db:        db,
-		bizRepo:   bizRepo,
+		repo:      bizRepo,
 		userRepo:  userRepo,
 		generator: generator,
 	}

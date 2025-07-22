@@ -15,7 +15,7 @@ var _ ginpkg.RouteRegistry = (*BizHandler)(nil)
 
 // BizHandler 业务方信息 web handler。
 type BizHandler struct {
-	bizSvc service.BizService
+	svc service.BizService
 }
 
 func (h *BizHandler) RegisterRoutes(engine *gin.Engine) {
@@ -41,7 +41,7 @@ func (h *BizHandler) Create(ctx *gin.Context, req createBizReq, au ginpkg.AuthUs
 		ContactEmail: req.ContactEmail,
 		CreatorId:    au.Uid,
 	}
-	bi, err := h.bizSvc.Create(ctx, bi)
+	bi, err := h.svc.Create(ctx, bi)
 	if err != nil {
 		return ginpkg.R{
 			Code: http.StatusInternalServerError,
@@ -74,13 +74,13 @@ func (h *BizHandler) List(ctx *gin.Context, req listBizReq, au ginpkg.AuthUser) 
 
 	switch au.UserType {
 	case domain.UserTypeAdmin:
-		list, err = h.bizSvc.List(ctx, req.Offset, req.Limit)
+		list, err = h.svc.List(ctx, req.Offset, req.Limit)
 		if err == nil {
-			total, err = h.bizSvc.Count(ctx)
+			total, err = h.svc.Count(ctx)
 		}
 	case domain.UserTypeOperator:
 		var bizInfo domain.BizInfo
-		bizInfo, err = h.bizSvc.FindById(ctx, au.Bid)
+		bizInfo, err = h.svc.FindById(ctx, au.Bid)
 		list = append(list, bizInfo)
 		total = 1
 	default:
@@ -99,6 +99,6 @@ func (h *BizHandler) List(ctx *gin.Context, req listBizReq, au ginpkg.AuthUser) 
 	}, nil
 }
 
-func NewBizHandler(bizSvc service.BizService) *BizHandler {
-	return &BizHandler{bizSvc: bizSvc}
+func NewBizHandler(svc service.BizService) *BizHandler {
+	return &BizHandler{svc: svc}
 }

@@ -29,7 +29,7 @@ type UserService interface {
 var _ UserService = (*JwtUserService)(nil)
 
 type JwtUserService struct {
-	userRepo repository.UserRepo
+	repo repository.UserRepo
 
 	atManager jwt.Manager[ginpkg.AuthUser] // access token manager
 	stManager jwt.Manager[ginpkg.AuthUser] // refresh token manager
@@ -44,7 +44,7 @@ func (s *JwtUserService) LoginWithType(
 	)
 	switch accountType {
 	case accountTypeEmail:
-		u, err = s.userRepo.FindByEmail(ctx, account)
+		u, err = s.repo.FindByEmail(ctx, account)
 	default:
 		return ginpkg.AuthUser{}, errs.ErrInvalidAccountType
 	}
@@ -101,10 +101,10 @@ func (s *JwtUserService) VerifyRefreshToken(_ context.Context, token string) (gi
 }
 
 func NewJwtUserService(
-	userRepo repository.UserRepo, atManager, stManager jwt.Manager[ginpkg.AuthUser],
+	repo repository.UserRepo, atManager, stManager jwt.Manager[ginpkg.AuthUser],
 ) *JwtUserService {
 	return &JwtUserService{
-		userRepo:  userRepo,
+		repo:      repo,
 		atManager: atManager,
 		stManager: stManager,
 	}

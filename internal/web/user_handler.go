@@ -15,8 +15,8 @@ var _ ginpkg.RouteRegistry = (*UserHandler)(nil)
 
 type UserHandler struct {
 	jwt.Handler
-	userSvc service.UserService
-	logger  *zap.Logger
+	svc    service.UserService
+	logger *zap.Logger
 }
 
 func (h *UserHandler) RegisterRoutes(engine *gin.Engine) {
@@ -40,7 +40,7 @@ type tokenResp struct {
 }
 
 func (h *UserHandler) Login(ctx *gin.Context, req loginReq) (ginpkg.R, error) {
-	au, err := h.userSvc.LoginWithType(ctx, req.Account, req.Credential, req.AccountType, req.VerifyType)
+	au, err := h.svc.LoginWithType(ctx, req.Account, req.Credential, req.AccountType, req.VerifyType)
 	if err != nil {
 		return ginpkg.R{
 			Code: http.StatusUnauthorized,
@@ -57,7 +57,7 @@ func (h *UserHandler) Login(ctx *gin.Context, req loginReq) (ginpkg.R, error) {
 		}, err
 	}
 
-	at, st, err := h.userSvc.GenerateToken(ctx, au)
+	at, st, err := h.svc.GenerateToken(ctx, au)
 	if err != nil {
 		return ginpkg.R{
 			Code: http.StatusInternalServerError,
@@ -79,7 +79,7 @@ type refreshTokenReq struct {
 }
 
 func (h *UserHandler) RefreshToken(ctx *gin.Context, req refreshTokenReq) (ginpkg.R, error) {
-	au, err := h.userSvc.VerifyRefreshToken(ctx, req.RefreshToken)
+	au, err := h.svc.VerifyRefreshToken(ctx, req.RefreshToken)
 	if err != nil {
 		return ginpkg.R{
 			Code: http.StatusUnauthorized,
@@ -104,7 +104,7 @@ func (h *UserHandler) RefreshToken(ctx *gin.Context, req refreshTokenReq) (ginpk
 	}
 
 	// 重新生成 access token 和 refresh token
-	at, st, err := h.userSvc.GenerateToken(ctx, au)
+	at, st, err := h.svc.GenerateToken(ctx, au)
 	if err != nil {
 		return ginpkg.R{
 			Code: http.StatusInternalServerError,
@@ -148,10 +148,10 @@ func (h *UserHandler) Logout(ctx *gin.Context) (ginpkg.R, error) {
 	}, nil
 }
 
-func NewUserHandler(handler jwt.Handler, userSvc service.UserService, logger *zap.Logger) *UserHandler {
+func NewUserHandler(handler jwt.Handler, svc service.UserService, logger *zap.Logger) *UserHandler {
 	return &UserHandler{
 		Handler: handler,
-		userSvc: userSvc,
+		svc:     svc,
 		logger:  logger,
 	}
 }

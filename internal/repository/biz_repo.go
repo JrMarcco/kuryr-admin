@@ -22,11 +22,11 @@ type BizRepo interface {
 var _ BizRepo = (*DefaultBizRepo)(nil)
 
 type DefaultBizRepo struct {
-	bizDAO dao.BizDao
+	dao dao.BizDao
 }
 
 func (r *DefaultBizRepo) CreateWithTx(ctx context.Context, tx *gorm.DB, bi domain.BizInfo) (domain.BizInfo, error) {
-	entity, err := r.bizDAO.SaveWithTx(ctx, tx, r.toEntity(bi))
+	entity, err := r.dao.SaveWithTx(ctx, tx, r.toEntity(bi))
 	if err != nil {
 		if isUniqueConstraintError(err) {
 			if strings.Contains(err.Error(), "biz_key") {
@@ -67,11 +67,11 @@ func isUniqueConstraintError(err error) bool {
 }
 
 func (r *DefaultBizRepo) Count(ctx context.Context) (int64, error) {
-	return r.bizDAO.Count(ctx)
+	return r.dao.Count(ctx)
 }
 
 func (r *DefaultBizRepo) List(ctx context.Context, offset, limit int) ([]domain.BizInfo, error) {
-	entities, err := r.bizDAO.List(ctx, offset, limit)
+	entities, err := r.dao.List(ctx, offset, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (r *DefaultBizRepo) List(ctx context.Context, offset, limit int) ([]domain.
 }
 
 func (r *DefaultBizRepo) FindById(ctx context.Context, id uint64) (domain.BizInfo, error) {
-	entity, err := r.bizDAO.FindById(ctx, id)
+	entity, err := r.dao.FindById(ctx, id)
 	if err != nil {
 		return domain.BizInfo{}, err
 	}
@@ -114,6 +114,6 @@ func (r *DefaultBizRepo) toEntity(bi domain.BizInfo) dao.BizInfo {
 	}
 }
 
-func NewBizRepo(bizDAO dao.BizDao) *DefaultBizRepo {
-	return &DefaultBizRepo{bizDAO: bizDAO}
+func NewBizRepo(dao dao.BizDao) *DefaultBizRepo {
+	return &DefaultBizRepo{dao: dao}
 }

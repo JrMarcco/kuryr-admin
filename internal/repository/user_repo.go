@@ -16,11 +16,11 @@ type UserRepo interface {
 var _ UserRepo = (*DefaultUserRepo)(nil)
 
 type DefaultUserRepo struct {
-	userDAO dao.UserDao
+	dao dao.UserDao
 }
 
 func (r *DefaultUserRepo) CreateWithTx(ctx context.Context, tx *gorm.DB, u domain.SysUser) (domain.SysUser, error) {
-	eu, err := r.userDAO.CreateWithTx(ctx, tx, dao.SysUser{
+	eu, err := r.dao.CreateWithTx(ctx, tx, dao.SysUser{
 		Id:        u.Id,
 		Email:     u.Email,
 		Password:  u.Password,
@@ -37,7 +37,7 @@ func (r *DefaultUserRepo) CreateWithTx(ctx context.Context, tx *gorm.DB, u domai
 }
 
 func (r *DefaultUserRepo) FindByEmail(ctx context.Context, email string) (domain.SysUser, error) {
-	eu, err := r.userDAO.FindByEmail(ctx, email)
+	eu, err := r.dao.FindByEmail(ctx, email)
 	if err != nil {
 		return domain.SysUser{}, err
 	}
@@ -57,6 +57,6 @@ func (r *DefaultUserRepo) toDomain(eu dao.SysUser) domain.SysUser {
 	}
 }
 
-func NewUserRepo(userDAO dao.UserDao) *DefaultUserRepo {
-	return &DefaultUserRepo{userDAO: userDAO}
+func NewUserRepo(dao dao.UserDao) *DefaultUserRepo {
+	return &DefaultUserRepo{dao: dao}
 }
