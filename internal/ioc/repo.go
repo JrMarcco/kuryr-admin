@@ -12,12 +12,12 @@ var RepoFxOpt = fx.Options(
 		// user dao
 		fx.Annotate(
 			dao.NewUserDAO,
-			fx.As(new(dao.UserDAO)),
+			fx.As(new(dao.UserDao)),
 		),
 		// biz dao
 		fx.Annotate(
 			dao.NewBizDAO,
-			fx.As(new(dao.BizDAO)),
+			fx.As(new(dao.BizDao)),
 		),
 	),
 	// cache

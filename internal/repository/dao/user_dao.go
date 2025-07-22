@@ -22,19 +22,19 @@ func (su SysUser) TableName() string {
 	return "sys_user"
 }
 
-type UserDAO interface {
+type UserDao interface {
 	CreateWithTx(ctx context.Context, tx *gorm.DB, u SysUser) (SysUser, error)
 	FindByEmail(ctx context.Context, email string) (SysUser, error)
 	FindByMobile(ctx context.Context, mobile string) (SysUser, error)
 }
 
-var _ UserDAO = (*DefaultUserDAO)(nil)
+var _ UserDao = (*DefaultUserDao)(nil)
 
-type DefaultUserDAO struct {
+type DefaultUserDao struct {
 	db *gorm.DB
 }
 
-func (d *DefaultUserDAO) CreateWithTx(ctx context.Context, tx *gorm.DB, u SysUser) (SysUser, error) {
+func (d *DefaultUserDao) CreateWithTx(ctx context.Context, tx *gorm.DB, u SysUser) (SysUser, error) {
 	now := time.Now().UnixMilli()
 	u.CreatedAt = now
 	u.UpdatedAt = now
@@ -43,7 +43,7 @@ func (d *DefaultUserDAO) CreateWithTx(ctx context.Context, tx *gorm.DB, u SysUse
 	return u, err
 }
 
-func (d *DefaultUserDAO) FindByEmail(ctx context.Context, email string) (SysUser, error) {
+func (d *DefaultUserDao) FindByEmail(ctx context.Context, email string) (SysUser, error) {
 	var su SysUser
 	err := d.db.WithContext(ctx).Model(&SysUser{}).
 		Where("email = ?", email).
@@ -51,7 +51,7 @@ func (d *DefaultUserDAO) FindByEmail(ctx context.Context, email string) (SysUser
 	return su, err
 }
 
-func (d *DefaultUserDAO) FindByMobile(ctx context.Context, mobile string) (SysUser, error) {
+func (d *DefaultUserDao) FindByMobile(ctx context.Context, mobile string) (SysUser, error) {
 	var su SysUser
 	err := d.db.WithContext(ctx).Model(&SysUser{}).
 		Where("mobile = ?", mobile).
@@ -59,6 +59,6 @@ func (d *DefaultUserDAO) FindByMobile(ctx context.Context, mobile string) (SysUs
 	return su, err
 }
 
-func NewUserDAO(db *gorm.DB) *DefaultUserDAO {
-	return &DefaultUserDAO{db: db}
+func NewUserDAO(db *gorm.DB) *DefaultUserDao {
+	return &DefaultUserDao{db: db}
 }

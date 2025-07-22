@@ -24,7 +24,7 @@ func (bi BizInfo) TableName() string {
 	return "biz_info"
 }
 
-type BizDAO interface {
+type BizDao interface {
 	SaveWithTx(ctx context.Context, tx *gorm.DB, entity BizInfo) (BizInfo, error)
 
 	Count(ctx context.Context) (int64, error)
@@ -32,13 +32,13 @@ type BizDAO interface {
 	FindById(ctx context.Context, id uint64) (BizInfo, error)
 }
 
-var _ BizDAO = (*DefaultBizDAO)(nil)
+var _ BizDao = (*DefaultBizDao)(nil)
 
-type DefaultBizDAO struct {
+type DefaultBizDao struct {
 	db *gorm.DB
 }
 
-func (d *DefaultBizDAO) SaveWithTx(ctx context.Context, tx *gorm.DB, entity BizInfo) (BizInfo, error) {
+func (d *DefaultBizDao) SaveWithTx(ctx context.Context, tx *gorm.DB, entity BizInfo) (BizInfo, error) {
 	now := time.Now().UnixMilli()
 	entity.CreatedAt = now
 	entity.UpdatedAt = now
@@ -58,13 +58,13 @@ func (d *DefaultBizDAO) SaveWithTx(ctx context.Context, tx *gorm.DB, entity BizI
 	return entity, nil
 }
 
-func (d *DefaultBizDAO) Count(ctx context.Context) (int64, error) {
+func (d *DefaultBizDao) Count(ctx context.Context) (int64, error) {
 	var count int64
 	err := d.db.WithContext(ctx).Model(&BizInfo{}).Count(&count).Error
 	return count, err
 }
 
-func (d *DefaultBizDAO) List(ctx context.Context, offset, limit int) ([]BizInfo, error) {
+func (d *DefaultBizDao) List(ctx context.Context, offset, limit int) ([]BizInfo, error) {
 	var bis []BizInfo
 	err := d.db.WithContext(ctx).Model(&BizInfo{}).
 		Offset(offset).
@@ -73,7 +73,7 @@ func (d *DefaultBizDAO) List(ctx context.Context, offset, limit int) ([]BizInfo,
 	return bis, err
 }
 
-func (d *DefaultBizDAO) FindById(ctx context.Context, id uint64) (BizInfo, error) {
+func (d *DefaultBizDao) FindById(ctx context.Context, id uint64) (BizInfo, error) {
 	var bi BizInfo
 	err := d.db.WithContext(ctx).Model(&BizInfo{}).
 		Where("id = ?", id).
@@ -81,6 +81,6 @@ func (d *DefaultBizDAO) FindById(ctx context.Context, id uint64) (BizInfo, error
 	return bi, err
 }
 
-func NewBizDAO(db *gorm.DB) *DefaultBizDAO {
-	return &DefaultBizDAO{db: db}
+func NewBizDAO(db *gorm.DB) *DefaultBizDao {
+	return &DefaultBizDao{db: db}
 }

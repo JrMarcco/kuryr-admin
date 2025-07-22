@@ -22,7 +22,7 @@ type BizRepo interface {
 var _ BizRepo = (*DefaultBizRepo)(nil)
 
 type DefaultBizRepo struct {
-	bizDAO dao.BizDAO
+	bizDAO dao.BizDao
 }
 
 func (r *DefaultBizRepo) CreateWithTx(ctx context.Context, tx *gorm.DB, bi domain.BizInfo) (domain.BizInfo, error) {
@@ -114,6 +114,6 @@ func (r *DefaultBizRepo) toEntity(bi domain.BizInfo) dao.BizInfo {
 	}
 }
 
-func NewBizRepo(bizDAO dao.BizDAO) *DefaultBizRepo {
+func NewBizRepo(bizDAO dao.BizDao) *DefaultBizRepo {
 	return &DefaultBizRepo{bizDAO: bizDAO}
 }

@@ -16,7 +16,7 @@ type UserRepo interface {
 var _ UserRepo = (*DefaultUserRepo)(nil)
 
 type DefaultUserRepo struct {
-	userDAO dao.UserDAO
+	userDAO dao.UserDao
 }
 
 func (r *DefaultUserRepo) CreateWithTx(ctx context.Context, tx *gorm.DB, u domain.SysUser) (domain.SysUser, error) {
@@ -57,6 +57,6 @@ func (r *DefaultUserRepo) toDomain(eu dao.SysUser) domain.SysUser {
 	}
 }
 
-func NewUserRepo(userDAO dao.UserDAO) *DefaultUserRepo {
+func NewUserRepo(userDAO dao.UserDao) *DefaultUserRepo {
 	return &DefaultUserRepo{userDAO: userDAO}
 }
