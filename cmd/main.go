@@ -21,14 +21,14 @@ func main() {
 		ioc.RedisFxOpt,
 		// 初始化 jwt manager
 		ioc.JwtManagerOpt,
+		// 初始化 middleware builder
+		ioc.MiddlewareBuilderOpt,
 		// 初始化 repo
 		ioc.RepoFxOpt,
 		// 初始化 service
 		ioc.ServiceFxOpt,
 		// 初始化 handler
 		ioc.HandlerFxOpt,
-		// 初始化 middleware builder
-		ioc.MiddlewareBuilderOpt,
 		// 初始化 ioc.App
 		ioc.AppFxOpt,
 
