@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/JrMarcco/easy-grpc/client"
-	"github.com/JrMarcco/easy-grpc/client/bl"
-	"github.com/JrMarcco/easy-grpc/client/sl"
+	"github.com/JrMarcco/easy-grpc/client/br"
+	"github.com/JrMarcco/easy-grpc/client/rr"
 	"github.com/JrMarcco/easy-grpc/registry"
 	configv1 "github.com/JrMarcco/kuryr-api/api/config/v1"
 	notificationv1 "github.com/JrMarcco/kuryr-api/api/notification/v1"
@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/balancer/base"
+	"google.golang.org/grpc/keepalive"
 )
 
 var GrpcClientFxOpt = fx.Provide(
@@ -21,9 +22,16 @@ var GrpcClientFxOpt = fx.Provide(
 	InitBizConfigGrpcClients,
 )
 
+type keepaliveConfig struct {
+	Time                int  `mapstructure:"time"`
+	Timeout             int  `mapstructure:"timeout"`
+	PermitWithoutStream bool `mapstructure:"permit_without_stream"`
+}
+
 type lbConfig struct {
-	Name    string `mapstructure:"name"`
-	Timeout int    `mapstructure:"timeout"`
+	Name      string           `mapstructure:"name"`
+	Timeout   int              `mapstructure:"timeout"`
+	KeepAlive *keepaliveConfig `mapstructure:"keep_alive"`
 }
 
 func loadLoadBalanceConfig() *lbConfig {
@@ -39,7 +47,7 @@ func InitNotificationGrpcClients(r registry.Registry) *client.Manager[notificati
 	cfg := loadLoadBalanceConfig()
 	bb := base.NewBalancerBuilder(
 		cfg.Name,
-		bl.NewRwWeightBalancerBuilder(),
+		br.NewRwWeightBalancerBuilder(),
 		base.Config{HealthCheck: true},
 	)
 
@@ -47,12 +55,16 @@ func InitNotificationGrpcClients(r registry.Registry) *client.Manager[notificati
 	balancer.Register(bb)
 
 	return client.NewManagerBuilder(
-		sl.NewResolverBuilder(r, time.Duration(cfg.Timeout)*time.Millisecond),
+		rr.NewResolverBuilder(r, time.Duration(cfg.Timeout)*time.Millisecond),
 		bb,
 		func(conn *grpc.ClientConn) notificationv1.NotificationServiceClient {
 			return notificationv1.NewNotificationServiceClient(conn)
 		},
-	).Insecure().Build()
+	).KeepAlive(keepalive.ClientParameters{
+		Time:                time.Duration(cfg.KeepAlive.Time) * time.Millisecond,
+		Timeout:             time.Duration(cfg.KeepAlive.Timeout) * time.Millisecond,
+		PermitWithoutStream: cfg.KeepAlive.PermitWithoutStream,
+	}).Insecure().Build()
 }
 
 // InitBizConfigGrpcClients 初始化 biz config grpc client 管理器
@@ -60,7 +72,7 @@ func InitBizConfigGrpcClients(r registry.Registry) *client.Manager[configv1.BizC
 	cfg := loadLoadBalanceConfig()
 	bb := base.NewBalancerBuilder(
 		cfg.Name,
-		bl.NewRwWeightBalancerBuilder(),
+		br.NewRwWeightBalancerBuilder(),
 		base.Config{HealthCheck: true},
 	)
 
@@ -68,10 +80,14 @@ func InitBizConfigGrpcClients(r registry.Registry) *client.Manager[configv1.BizC
 	balancer.Register(bb)
 
 	return client.NewManagerBuilder(
-		sl.NewResolverBuilder(r, time.Duration(cfg.Timeout)*time.Millisecond),
+		rr.NewResolverBuilder(r, time.Duration(cfg.Timeout)*time.Millisecond),
 		bb,
 		func(conn *grpc.ClientConn) configv1.BizConfigServiceClient {
 			return configv1.NewBizConfigServiceClient(conn)
 		},
-	).Insecure().Build()
+	).KeepAlive(keepalive.ClientParameters{
+		Time:                time.Duration(cfg.KeepAlive.Time) * time.Millisecond,
+		Timeout:             time.Duration(cfg.KeepAlive.Timeout) * time.Millisecond,
+		PermitWithoutStream: cfg.KeepAlive.PermitWithoutStream,
+	}).Insecure().Build()
 }

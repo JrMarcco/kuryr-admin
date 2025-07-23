@@ -18,7 +18,7 @@ type RouteRegistry interface {
 
 // R 接口统一返回
 type R struct {
-	Code int    `json:"code"`
+	Code int    `json:"code"` // 使用 http.StatusXxx
 	Msg  string `json:"msg"`
 	Data any    `json:"data"`
 }

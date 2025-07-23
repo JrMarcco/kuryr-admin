@@ -23,7 +23,7 @@ func W(bizFunc func(*gin.Context) (R, error)) gin.HandlerFunc {
 			ctx.PureJSON(http.StatusInternalServerError, r)
 			return
 		}
-		ctx.PureJSON(http.StatusOK, r)
+		ctx.PureJSON(r.Code, r)
 	}
 }
 
@@ -47,7 +47,7 @@ func B[Req any](bizFunc func(*gin.Context, Req) (R, error)) gin.HandlerFunc {
 			ctx.PureJSON(http.StatusInternalServerError, r)
 			return
 		}
-		ctx.PureJSON(http.StatusOK, r)
+		ctx.PureJSON(r.Code, r)
 	}
 }
 
@@ -71,7 +71,7 @@ func Q[Req any](bizFunc func(*gin.Context, Req) (R, error)) gin.HandlerFunc {
 			ctx.PureJSON(http.StatusInternalServerError, r)
 			return
 		}
-		ctx.PureJSON(http.StatusOK, r)
+		ctx.PureJSON(r.Code, r)
 	}
 }
 
@@ -95,7 +95,7 @@ func P[Req any](bizFunc func(*gin.Context, Req) (R, error)) gin.HandlerFunc {
 			ctx.PureJSON(http.StatusInternalServerError, r)
 			return
 		}
-		ctx.PureJSON(http.StatusOK, r)
+		ctx.PureJSON(r.Code, r)
 	}
 }
 
@@ -128,7 +128,7 @@ func BU[Req any](bizFunc func(*gin.Context, Req, AuthUser) (R, error)) gin.Handl
 			ctx.PureJSON(http.StatusInternalServerError, r)
 			return
 		}
-		ctx.PureJSON(http.StatusOK, r)
+		ctx.PureJSON(r.Code, r)
 	}
 }
 
@@ -161,7 +161,7 @@ func QU[Req any](bizFunc func(*gin.Context, Req, AuthUser) (R, error)) gin.Handl
 			ctx.PureJSON(http.StatusInternalServerError, r)
 			return
 		}
-		ctx.PureJSON(http.StatusOK, r)
+		ctx.PureJSON(r.Code, r)
 	}
 }
 
@@ -194,6 +194,6 @@ func PU[Req any](bizFunc func(*gin.Context, Req, AuthUser) (R, error)) gin.Handl
 			ctx.PureJSON(http.StatusInternalServerError, r)
 			return
 		}
-		ctx.PureJSON(http.StatusOK, r)
+		ctx.PureJSON(r.Code, r)
 	}
 }

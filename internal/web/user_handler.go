@@ -22,8 +22,8 @@ type UserHandler struct {
 func (h *UserHandler) RegisterRoutes(engine *gin.Engine) {
 	v1 := engine.Group("/api/v1/user")
 
-	v1.Handle(http.MethodPost, "/login", pkggin.B[loginReq](h.Login))
-	v1.Handle(http.MethodPost, "/refresh_token", pkggin.B[refreshTokenReq](h.RefreshToken))
+	v1.Handle(http.MethodPost, "/login", pkggin.B(h.Login))
+	v1.Handle(http.MethodPost, "/refresh_token", pkggin.B(h.RefreshToken))
 	v1.Handle(http.MethodGet, "/logout", pkggin.W(h.Logout))
 }
 

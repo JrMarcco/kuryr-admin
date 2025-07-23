@@ -21,8 +21,8 @@ type BizHandler struct {
 func (h *BizHandler) RegisterRoutes(engine *gin.Engine) {
 	v1 := engine.Group("/api/v1/biz")
 
-	v1.Handle(http.MethodPost, "/create", pkggin.BU[createBizReq](h.Create))
-	v1.Handle(http.MethodGet, "/list", pkggin.QU[listBizReq](h.List))
+	v1.Handle(http.MethodPost, "/create", pkggin.BU(h.Create))
+	v1.Handle(http.MethodGet, "/list", pkggin.QU(h.List))
 }
 
 type createBizReq struct {

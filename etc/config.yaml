@@ -2,7 +2,7 @@ profile:
   env: "dev"
 
 app:
-  addr: ":8080"
+  addr: "localhost:8080"
 
 db:
   # sslmode=disable 用于开发环境，线上一般推荐使用 sslmode=require / sslmode=verify-ca(更高安全性) / sslmode=verify-full (最高安全性)
@@ -48,7 +48,7 @@ etcd:
     - "192.168.3.3:52383"
   username: "root"
   password: "<root_passwd>"
-  dial_timeout: 5000            # 单位：毫秒
+  dial_timeout: 1000  # 单位：毫秒
   tls:
     enabled: true
     cert_file: "etc/etcd-certs/client.pem"
@@ -61,4 +61,8 @@ registry:
 
 load_balance:
   name: "read_write_weight"
-  timeout: 1000 # 单位：毫秒
+  timeout: 3000                       # 单位：毫秒
+  keep_alive:
+    time: 600000                      # 单位：毫秒
+    timeout: 10000                    # 单位：毫秒
+    permit_without_stream: true
