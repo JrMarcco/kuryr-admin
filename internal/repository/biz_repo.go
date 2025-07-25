@@ -12,7 +12,8 @@ import (
 )
 
 type BizRepo interface {
-	CreateWithTx(ctx context.Context, tx *gorm.DB, bi domain.BizInfo) (domain.BizInfo, error)
+	SaveWithTx(ctx context.Context, tx *gorm.DB, bi domain.BizInfo) (domain.BizInfo, error)
+	DeleteWithTx(ctx context.Context, tx *gorm.DB, id uint64) error
 
 	Count(ctx context.Context) (int64, error)
 	List(ctx context.Context, offset, limit int) ([]domain.BizInfo, error)
@@ -25,7 +26,7 @@ type DefaultBizRepo struct {
 	dao dao.BizDao
 }
 
-func (r *DefaultBizRepo) CreateWithTx(ctx context.Context, tx *gorm.DB, bi domain.BizInfo) (domain.BizInfo, error) {
+func (r *DefaultBizRepo) SaveWithTx(ctx context.Context, tx *gorm.DB, bi domain.BizInfo) (domain.BizInfo, error) {
 	entity, err := r.dao.SaveWithTx(ctx, tx, r.toEntity(bi))
 	if err != nil {
 		if isUniqueConstraintError(err) {
@@ -64,6 +65,10 @@ func isUniqueConstraintError(err error) bool {
 		}
 	}
 	return false
+}
+
+func (r *DefaultBizRepo) DeleteWithTx(ctx context.Context, tx *gorm.DB, id uint64) error {
+	return r.dao.DeleteWithTx(ctx, tx, id)
 }
 
 func (r *DefaultBizRepo) Count(ctx context.Context) (int64, error) {

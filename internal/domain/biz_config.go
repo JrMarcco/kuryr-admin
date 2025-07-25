@@ -4,8 +4,7 @@ import "time"
 
 // BizConfig 业务方配置领域对象。
 type BizConfig struct {
-	Id             uint64          `json:"id"`
-	OwnerId        uint64          `json:"owner_id"`       // 所有者 id ( biz_info.id )
+	Id             uint64          `json:"id"`             // 对应 ( biz_info.id )
 	ChannelConfig  *ChannelConfig  `json:"channel_config"` // 渠道配置
 	QuotaConfig    *QuotaConfig    `json:"quota_config"`   // 配额配置
 	CallbackConfig *CallbackConfig `json:"callback_config"`

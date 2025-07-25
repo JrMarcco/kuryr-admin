@@ -23,7 +23,9 @@ func (su SysUser) TableName() string {
 }
 
 type UserDao interface {
-	CreateWithTx(ctx context.Context, tx *gorm.DB, u SysUser) (SysUser, error)
+	SaveWithTx(ctx context.Context, tx *gorm.DB, u SysUser) (SysUser, error)
+	DeleteByBizIdWithTx(ctx context.Context, tx *gorm.DB, id uint64) error
+
 	FindByEmail(ctx context.Context, email string) (SysUser, error)
 	FindByMobile(ctx context.Context, mobile string) (SysUser, error)
 }
@@ -34,13 +36,19 @@ type DefaultUserDao struct {
 	db *gorm.DB
 }
 
-func (d *DefaultUserDao) CreateWithTx(ctx context.Context, tx *gorm.DB, u SysUser) (SysUser, error) {
+func (d *DefaultUserDao) SaveWithTx(ctx context.Context, tx *gorm.DB, u SysUser) (SysUser, error) {
 	now := time.Now().UnixMilli()
 	u.CreatedAt = now
 	u.UpdatedAt = now
 
 	err := tx.WithContext(ctx).Model(&SysUser{}).Create(&u).Error
 	return u, err
+}
+
+func (d *DefaultUserDao) DeleteByBizIdWithTx(ctx context.Context, tx *gorm.DB, id uint64) error {
+	return tx.WithContext(ctx).Model(&BizInfo{}).
+		Where("biz_id = ?", id).
+		Delete(&SysUser{}).Error
 }
 
 func (d *DefaultUserDao) FindByEmail(ctx context.Context, email string) (SysUser, error) {

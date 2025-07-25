@@ -31,6 +31,10 @@ GET http://localhost:8080/api/v1/biz/list?offset=0&limit=10
 X-ACCESS-TOKEN: {{access_token}}
 
 
+#### Get Business Config
+GET http://localhost:8080/api/v1/biz_config/get?biz_id=1
+X-ACCESS-TOKEN: {{access_token}}
+
 
 #### Save Biz Config
 POST http://localhost:8080/api/v1/biz_config/create

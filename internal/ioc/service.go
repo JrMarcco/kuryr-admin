@@ -1,10 +1,15 @@
 package ioc
 
 import (
+	"github.com/JrMarcco/easy-grpc/client"
 	"github.com/JrMarcco/kuryr-admin/internal/pkg/secret"
 	"github.com/JrMarcco/kuryr-admin/internal/pkg/secret/base64"
+	"github.com/JrMarcco/kuryr-admin/internal/repository"
 	"github.com/JrMarcco/kuryr-admin/internal/service"
+	configv1 "github.com/JrMarcco/kuryr-api/api/config/v1"
+	"github.com/spf13/viper"
 	"go.uber.org/fx"
+	"gorm.io/gorm"
 )
 
 var ServiceFxOpt = fx.Options(
@@ -22,14 +27,43 @@ var ServiceFxOpt = fx.Options(
 
 		// biz service
 		fx.Annotate(
-			service.NewDefaultBizService,
+			InitBizService,
 			fx.As(new(service.BizService)),
 		),
 
 		// biz config service
 		fx.Annotate(
-			service.NewDefaultBizConfigService,
+			InitBizConfigService,
 			fx.As(new(service.BizConfigService)),
 		),
 	),
 )
+
+func grpcServerNameBizConfig() string {
+	type config struct {
+		Name string `mapstructure:"name"`
+	}
+
+	cfg := config{}
+	if err := viper.UnmarshalKey("grpc_servers.biz_config", &cfg); err != nil {
+		panic(err)
+	}
+	return cfg.Name
+}
+
+func InitBizService(
+	db *gorm.DB, bizRepo repository.BizRepo, userRepo repository.UserRepo, generator secret.Generator,
+	grpcClients *client.Manager[configv1.BizConfigServiceClient],
+) *service.DefaultBizService {
+	return service.NewDefaultBizService(
+		grpcServerNameBizConfig(), db, bizRepo, userRepo, generator, grpcClients,
+	)
+}
+
+func InitBizConfigService(
+	grpcClients *client.Manager[configv1.BizConfigServiceClient],
+) *service.DefaultBizConfigService {
+	return service.NewDefaultBizConfigService(
+		grpcServerNameBizConfig(), grpcClients,
+	)
+}

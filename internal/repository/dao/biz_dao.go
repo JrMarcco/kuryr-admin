@@ -26,6 +26,7 @@ func (bi BizInfo) TableName() string {
 
 type BizDao interface {
 	SaveWithTx(ctx context.Context, tx *gorm.DB, entity BizInfo) (BizInfo, error)
+	DeleteWithTx(ctx context.Context, tx *gorm.DB, id uint64) error
 
 	Count(ctx context.Context) (int64, error)
 	List(ctx context.Context, offset, limit int) ([]BizInfo, error)
@@ -44,18 +45,25 @@ func (d *DefaultBizDao) SaveWithTx(ctx context.Context, tx *gorm.DB, entity BizI
 	entity.UpdatedAt = now
 
 	// 这里使用 upsert
-	err := tx.WithContext(ctx).Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "id"}},
-		DoUpdates: clause.Assignments(map[string]any{
-			"biz_key":    entity.BizKey,
-			"biz_name":   entity.BizName,
-			"updated_at": now,
-		}),
-	}).Create(&entity).Error
+	err := tx.WithContext(ctx).Model(&BizInfo{}).
+		Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "id"}},
+			DoUpdates: clause.Assignments(map[string]any{
+				"biz_key":    entity.BizKey,
+				"biz_name":   entity.BizName,
+				"updated_at": now,
+			}),
+		}).Create(&entity).Error
 	if err != nil {
 		return BizInfo{}, err
 	}
 	return entity, nil
+}
+
+func (d *DefaultBizDao) DeleteWithTx(ctx context.Context, tx *gorm.DB, id uint64) error {
+	return tx.WithContext(ctx).Model(&BizInfo{}).
+		Where("id = ?", id).
+		Delete(&BizInfo{}).Error
 }
 
 func (d *DefaultBizDao) Count(ctx context.Context) (int64, error) {

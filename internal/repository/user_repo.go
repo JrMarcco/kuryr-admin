@@ -9,7 +9,9 @@ import (
 )
 
 type UserRepo interface {
-	CreateWithTx(ctx context.Context, tx *gorm.DB, u domain.SysUser) (domain.SysUser, error)
+	SaveWithTx(ctx context.Context, tx *gorm.DB, u domain.SysUser) (domain.SysUser, error)
+	DeleteByBizIdWithTx(ctx context.Context, tx *gorm.DB, bizId uint64) error
+
 	FindByEmail(ctx context.Context, email string) (domain.SysUser, error)
 }
 
@@ -19,8 +21,8 @@ type DefaultUserRepo struct {
 	dao dao.UserDao
 }
 
-func (r *DefaultUserRepo) CreateWithTx(ctx context.Context, tx *gorm.DB, u domain.SysUser) (domain.SysUser, error) {
-	eu, err := r.dao.CreateWithTx(ctx, tx, dao.SysUser{
+func (r *DefaultUserRepo) SaveWithTx(ctx context.Context, tx *gorm.DB, u domain.SysUser) (domain.SysUser, error) {
+	eu, err := r.dao.SaveWithTx(ctx, tx, dao.SysUser{
 		Id:        u.Id,
 		Email:     u.Email,
 		Password:  u.Password,
@@ -34,6 +36,10 @@ func (r *DefaultUserRepo) CreateWithTx(ctx context.Context, tx *gorm.DB, u domai
 		return domain.SysUser{}, err
 	}
 	return r.toDomain(eu), nil
+}
+
+func (r *DefaultUserRepo) DeleteByBizIdWithTx(ctx context.Context, tx *gorm.DB, bizId uint64) error {
+	return r.dao.DeleteByBizIdWithTx(ctx, tx, bizId)
 }
 
 func (r *DefaultUserRepo) FindByEmail(ctx context.Context, email string) (domain.SysUser, error) {

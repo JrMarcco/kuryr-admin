@@ -16,13 +16,14 @@ type BizConfigHandler struct {
 	svc service.BizConfigService
 }
 
-func (b *BizConfigHandler) RegisterRoutes(engine *gin.Engine) {
+func (h *BizConfigHandler) RegisterRoutes(engine *gin.Engine) {
 	v1 := engine.Group("/api/v1/biz_config")
 
-	v1.Handle(http.MethodPost, "/create", pkggin.BU(b.Create))
+	v1.Handle(http.MethodPost, "/save", pkggin.B(h.Save))
+	v1.Handle(http.MethodGet, "/get", pkggin.Q(h.Get))
 }
 
-type createBizConfigReq struct {
+type saveBizConfigReq struct {
 	BizId          uint64          `json:"biz_id"`
 	ChannelConfig  *channelConfig  `json:"channel_config,omitempty"`
 	QuotaConfig    *quotaConfig    `json:"quota_config,omitempty"`
@@ -62,8 +63,8 @@ type retryConfig struct {
 	MaxRetryTimes   int32 `json:"max_retry_times"`
 }
 
-func (b *BizConfigHandler) Create(ctx *gin.Context, req createBizConfigReq, au pkggin.AuthUser) (pkggin.R, error) {
-	if req.BizId <= 0 {
+func (h *BizConfigHandler) Save(ctx *gin.Context, req saveBizConfigReq) (pkggin.R, error) {
+	if req.BizId == 0 {
 		return pkggin.R{
 			Code: http.StatusBadRequest,
 			Msg:  "invalid biz_id, must be greater than 0",
@@ -79,7 +80,6 @@ func (b *BizConfigHandler) Create(ctx *gin.Context, req createBizConfigReq, au p
 
 	// 构建 domain.BizConfig
 	bizConfig := domain.BizConfig{
-		OwnerId:   req.BizId,
 		RateLimit: req.RateLimit,
 	}
 
@@ -129,7 +129,29 @@ func (b *BizConfigHandler) Create(ctx *gin.Context, req createBizConfigReq, au p
 		}
 	}
 
-	err := b.svc.Create(ctx, bizConfig)
+	err := h.svc.Save(ctx, bizConfig)
+	if err != nil {
+		return pkggin.R{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, err
+	}
+	return pkggin.R{Code: http.StatusOK}, nil
+}
+
+type getBizConfigReq struct {
+	BizId uint64 `json:"biz_id" form:"biz_id"`
+}
+
+func (h *BizConfigHandler) Get(ctx *gin.Context, req getBizConfigReq) (pkggin.R, error) {
+	if req.BizId == 0 {
+		return pkggin.R{
+			Code: http.StatusBadRequest,
+			Msg:  "invalid biz_id, must be greater than 0",
+		}, nil
+	}
+
+	bizConfig, err := h.svc.GetByBizId(ctx, req.BizId)
 	if err != nil {
 		return pkggin.R{
 			Code: http.StatusInternalServerError,
@@ -138,6 +160,7 @@ func (b *BizConfigHandler) Create(ctx *gin.Context, req createBizConfigReq, au p
 	}
 	return pkggin.R{
 		Code: http.StatusOK,
+		Data: bizConfig,
 	}, nil
 }
 

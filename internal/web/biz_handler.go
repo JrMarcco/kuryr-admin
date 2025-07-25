@@ -21,7 +21,8 @@ type BizHandler struct {
 func (h *BizHandler) RegisterRoutes(engine *gin.Engine) {
 	v1 := engine.Group("/api/v1/biz")
 
-	v1.Handle(http.MethodPost, "/create", pkggin.BU(h.Create))
+	v1.Handle(http.MethodPost, "/save", pkggin.BU(h.Save))
+	v1.Handle(http.MethodDelete, "/delete", pkggin.Q(h.Delete))
 	v1.Handle(http.MethodGet, "/list", pkggin.QU(h.List))
 }
 
@@ -32,8 +33,8 @@ type createBizReq struct {
 	ContactEmail string `json:"contact_email"`
 }
 
-// Create 新建业务方信息。
-func (h *BizHandler) Create(ctx *gin.Context, req createBizReq, au pkggin.AuthUser) (pkggin.R, error) {
+// Save 新建业务方信息。
+func (h *BizHandler) Save(ctx *gin.Context, req createBizReq, au pkggin.AuthUser) (pkggin.R, error) {
 	bi := domain.BizInfo{
 		BizKey:       req.BizKey,
 		BizName:      req.BizName,
@@ -41,7 +42,7 @@ func (h *BizHandler) Create(ctx *gin.Context, req createBizReq, au pkggin.AuthUs
 		ContactEmail: req.ContactEmail,
 		CreatorId:    au.Uid,
 	}
-	bi, err := h.svc.Create(ctx, bi)
+	bi, err := h.svc.Save(ctx, bi)
 	if err != nil {
 		return pkggin.R{
 			Code: http.StatusInternalServerError,
@@ -54,9 +55,24 @@ func (h *BizHandler) Create(ctx *gin.Context, req createBizReq, au pkggin.AuthUs
 	}, nil
 }
 
+type deleteBizReq struct {
+	BizId uint64 `json:"biz_id" form:"biz_id"`
+}
+
+func (h *BizHandler) Delete(ctx *gin.Context, req deleteBizReq) (pkggin.R, error) {
+	err := h.svc.Delete(ctx, req.BizId)
+	if err != nil {
+		return pkggin.R{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}, err
+	}
+	return pkggin.R{Code: http.StatusOK}, nil
+}
+
 type listBizReq struct {
-	Offset int `form:"offset" json:"offset"`
-	Limit  int `form:"limit" json:"limit"`
+	Offset int `json:"offset" form:"offset"`
+	Limit  int `json:"limit" form:"limit"`
 }
 
 type listBizResp struct {

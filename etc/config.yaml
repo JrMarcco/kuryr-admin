@@ -4,6 +4,10 @@ profile:
 app:
   addr: "localhost:8080"
 
+grpc_servers:
+  biz_config:
+    name: "kuryr"
+
 db:
   # sslmode=disable 用于开发环境，线上一般推荐使用 sslmode=require / sslmode=verify-ca(更高安全性) / sslmode=verify-full (最高安全性)
   dsn: "postgres://jrmarcco:%3Cpasswd%3E@192.168.3.3:5432/kuryr_admin?sslmode=disable&connect_timeout=1&statement_timeout=3000&idle_in_transaction_session_timeout=3000"
