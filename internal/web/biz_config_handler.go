@@ -43,8 +43,8 @@ type channelItem struct {
 }
 
 type quotaConfig struct {
-	Daily   quota `json:"daily_quota,omitempty"`
-	Monthly quota `json:"monthly_quota,omitempty"`
+	Daily   quota `json:"daily,omitempty"`
+	Monthly quota `json:"monthly,omitempty"`
 }
 
 type quota struct {
@@ -80,6 +80,7 @@ func (h *BizConfigHandler) Save(ctx *gin.Context, req saveBizConfigReq) (pkggin.
 
 	// 构建 domain.BizConfig
 	bizConfig := domain.BizConfig{
+		Id:        req.BizId,
 		RateLimit: req.RateLimit,
 	}
 

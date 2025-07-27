@@ -37,7 +37,7 @@ X-ACCESS-TOKEN: {{access_token}}
 
 
 #### Save Biz Config
-POST http://localhost:8080/api/v1/biz_config/create
+POST http://localhost:8080/api/v1/biz_config/save
 X-ACCESS-TOKEN: {{access_token}}
 Content-Type: application/json
 
@@ -59,11 +59,11 @@ Content-Type: application/json
         }
     },
     "quota_config": {
-        "daily_quota": {
+        "daily": {
             "sms": 100,
             "email": 300
         },
-        "monthly_quota": {
+        "monthly": {
             "sms": 1500,
             "email": 5000
         }

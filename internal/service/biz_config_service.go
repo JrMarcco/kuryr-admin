@@ -182,8 +182,8 @@ func (s *DefaultBizConfigService) pbToDomain(pb *configv1.BizConfig) domain.BizC
 
 func (s *DefaultBizConfigService) convertRetry(pbRetry *configv1.RetryPolicyConfig) *domain.RetryConfig {
 	return &domain.RetryConfig{
-		InitialInterval: time.Duration(pbRetry.InitIntervalMs) * time.Millisecond,
-		MaxInterval:     time.Duration(pbRetry.MaxIntervalMs) * time.Millisecond,
+		InitialInterval: time.Duration(pbRetry.InitIntervalMs),
+		MaxInterval:     time.Duration(pbRetry.MaxIntervalMs),
 		MaxRetryTimes:   pbRetry.MaxRetryTimes,
 	}
 }
