@@ -27,6 +27,7 @@ var _ BizService = (*DefaultBizService)(nil)
 
 type DefaultBizService struct {
 	grpcServerName string
+	grpcClients    *client.Manager[configv1.BizConfigServiceClient]
 
 	db *gorm.DB // db 数据库连接，用于开启事务
 
@@ -34,8 +35,6 @@ type DefaultBizService struct {
 	userRepo repository.UserRepo
 
 	generator secret.Generator // biz secret 生成器
-
-	grpcClients *client.Manager[configv1.BizConfigServiceClient]
 }
 
 func (s *DefaultBizService) Save(ctx context.Context, bi domain.BizInfo) (domain.BizInfo, error) {
@@ -126,9 +125,8 @@ func (s *DefaultBizService) FindById(ctx context.Context, id uint64) (domain.Biz
 }
 
 func NewDefaultBizService(
-	grpcServerName string,
+	grpcServerName string, grpcClients *client.Manager[configv1.BizConfigServiceClient],
 	db *gorm.DB, bizRepo repository.BizRepo, userRepo repository.UserRepo, generator secret.Generator,
-	grpcClients *client.Manager[configv1.BizConfigServiceClient],
 ) *DefaultBizService {
 	return &DefaultBizService{
 		grpcServerName: grpcServerName,

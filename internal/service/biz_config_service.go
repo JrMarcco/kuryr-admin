@@ -2,12 +2,15 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/JrMarcco/easy-grpc/client"
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
+	"github.com/JrMarcco/kuryr-admin/internal/repository"
 	configv1 "github.com/JrMarcco/kuryr-api/api/config/v1"
+	"gorm.io/gorm"
 )
 
 type BizConfigService interface {
@@ -20,9 +23,20 @@ var _ BizConfigService = (*DefaultBizConfigService)(nil)
 type DefaultBizConfigService struct {
 	grpcServerName string
 	grpcClients    *client.Manager[configv1.BizConfigServiceClient]
+
+	bizRepo repository.BizRepo
 }
 
 func (s *DefaultBizConfigService) Save(ctx context.Context, bizConfig domain.BizConfig) error {
+
+	bi, err := s.bizRepo.FindById(ctx, bizConfig.Id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("[kuryr-admin] failed to find biz info [ %d ]", bizConfig.Id)
+		}
+		return fmt.Errorf("[kuryr-admin] failed to find biz info: %w", err)
+	}
+
 	grpcClient, err := s.grpcClients.Get(s.grpcServerName)
 	if err != nil {
 		return fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
@@ -30,7 +44,8 @@ func (s *DefaultBizConfigService) Save(ctx context.Context, bizConfig domain.Biz
 
 	// 构建 grpc 请求
 	pb := &configv1.BizConfig{
-		BizId:     bizConfig.Id,
+		BizId:     bi.Id,
+		OwnerType: bi.BizType.String(),
 		RateLimit: int32(bizConfig.RateLimit),
 	}
 
@@ -130,6 +145,7 @@ func (s *DefaultBizConfigService) GetByBizId(ctx context.Context, id uint64) (do
 func (s *DefaultBizConfigService) pbToDomain(pb *configv1.BizConfig) domain.BizConfig {
 	bizConfig := domain.BizConfig{
 		Id:        pb.BizId,
+		OwnerType: domain.BizType(pb.OwnerType),
 		RateLimit: int(pb.RateLimit),
 	}
 
@@ -196,9 +212,11 @@ func (s *DefaultBizConfigService) convertRetry(pbRetry *configv1.RetryPolicyConf
 
 func NewDefaultBizConfigService(
 	grpcServerName string, grpcClients *client.Manager[configv1.BizConfigServiceClient],
+	bizRepo repository.BizRepo,
 ) *DefaultBizConfigService {
 	return &DefaultBizConfigService{
 		grpcServerName: grpcServerName,
 		grpcClients:    grpcClients,
+		bizRepo:        bizRepo,
 	}
 }

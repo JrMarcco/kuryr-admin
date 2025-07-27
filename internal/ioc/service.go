@@ -56,14 +56,14 @@ func InitBizService(
 	grpcClients *client.Manager[configv1.BizConfigServiceClient],
 ) *service.DefaultBizService {
 	return service.NewDefaultBizService(
-		grpcServerNameBizConfig(), db, bizRepo, userRepo, generator, grpcClients,
+		grpcServerNameBizConfig(), grpcClients, db, bizRepo, userRepo, generator,
 	)
 }
 
 func InitBizConfigService(
-	grpcClients *client.Manager[configv1.BizConfigServiceClient],
+	grpcClients *client.Manager[configv1.BizConfigServiceClient], bizRepo repository.BizRepo,
 ) *service.DefaultBizConfigService {
 	return service.NewDefaultBizConfigService(
-		grpcServerNameBizConfig(), grpcClients,
+		grpcServerNameBizConfig(), grpcClients, bizRepo,
 	)
 }
