@@ -12,7 +12,11 @@ func (bt BizType) String() string {
 }
 
 func (bt BizType) IsValid() bool {
-	return bt == BizTypeIndividual || bt == BizTypeOrganization
+	switch bt {
+	case BizTypeIndividual, BizTypeOrganization:
+		return true
+	}
+	return false
 }
 
 func (bt BizType) IsIndividual() bool {
