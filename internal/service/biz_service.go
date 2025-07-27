@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/JrMarcco/easy-grpc/client"
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
@@ -88,9 +89,11 @@ func (s *DefaultBizService) Delete(ctx context.Context, id uint64) error {
 	if err != nil {
 		return fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
 	}
-	resp, err := grpcClient.Delete(ctx, &configv1.DeleteRequest{
-		Id: id,
-	})
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	resp, err := grpcClient.Delete(ctx, &configv1.DeleteRequest{Id: id})
+	cancel()
+
 	if err != nil {
 		return fmt.Errorf("[kuryr-admin] failed to delete biz config: %w", err)
 	}

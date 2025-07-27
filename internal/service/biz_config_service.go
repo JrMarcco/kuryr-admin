@@ -45,7 +45,10 @@ func (s *DefaultBizConfigService) Save(ctx context.Context, bizConfig domain.Biz
 		pb.CallbackConfig = s.convertToPbCallback(bizConfig.CallbackConfig)
 	}
 
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	resp, err := grpcClient.Save(ctx, &configv1.SaveRequest{Config: pb})
+	cancel()
+
 	if err != nil {
 		return fmt.Errorf("[kuryr-admin] failed to save biz config: %w", err)
 	}
@@ -113,7 +116,10 @@ func (s *DefaultBizConfigService) GetByBizId(ctx context.Context, id uint64) (do
 		return domain.BizConfig{}, fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
 	}
 
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	resp, err := grpcClient.GetById(ctx, &configv1.GetByIdRequest{Id: id})
+	cancel()
+
 	if err != nil {
 		return domain.BizConfig{}, fmt.Errorf("[kuryr-admin] failed to get biz config: %w", err)
 	}
