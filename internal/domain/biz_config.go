@@ -9,8 +9,6 @@ type BizConfig struct {
 	QuotaConfig    *QuotaConfig    `json:"quota_config"`   // 配额配置
 	CallbackConfig *CallbackConfig `json:"callback_config"`
 	RateLimit      int             `json:"rate_limit"`
-	CreatedAt      int64           `json:"created_at"`
-	UpdatedAt      int64           `json:"updated_at"`
 }
 
 type RetryConfig struct {

@@ -22,11 +22,12 @@ func (h *BizHandler) RegisterRoutes(engine *gin.Engine) {
 	v1 := engine.Group("/api/v1/biz")
 
 	v1.Handle(http.MethodPost, "/save", pkggin.BU(h.Save))
-	v1.Handle(http.MethodDelete, "/delete", pkggin.Q(h.Delete))
+	v1.Handle(http.MethodDelete, "/delete", pkggin.QU(h.Delete))
 	v1.Handle(http.MethodGet, "/list", pkggin.QU(h.List))
 }
 
 type createBizReq struct {
+	BizType      string `json:"biz_type"`
 	BizKey       string `json:"biz_key"`
 	BizName      string `json:"biz_name"`
 	Contact      string `json:"contact"`
@@ -35,7 +36,15 @@ type createBizReq struct {
 
 // Save 新建业务方信息。
 func (h *BizHandler) Save(ctx *gin.Context, req createBizReq, au pkggin.AuthUser) (pkggin.R, error) {
+	if au.UserType != domain.UserTypeAdmin {
+		return pkggin.R{
+			Code: http.StatusForbidden,
+			Msg:  "[kuryr-admin] only admin can save biz",
+		}, nil
+	}
+
 	bi := domain.BizInfo{
+		BizType:      domain.BizType(req.BizType),
 		BizKey:       req.BizKey,
 		BizName:      req.BizName,
 		Contact:      req.Contact,
@@ -59,7 +68,13 @@ type deleteBizReq struct {
 	BizId uint64 `json:"biz_id" form:"biz_id"`
 }
 
-func (h *BizHandler) Delete(ctx *gin.Context, req deleteBizReq) (pkggin.R, error) {
+func (h *BizHandler) Delete(ctx *gin.Context, req deleteBizReq, au pkggin.AuthUser) (pkggin.R, error) {
+	if au.UserType != domain.UserTypeAdmin {
+		return pkggin.R{
+			Code: http.StatusForbidden,
+			Msg:  "[kuryr-admin] only admin can delete biz",
+		}, nil
+	}
 	err := h.svc.Delete(ctx, req.BizId)
 	if err != nil {
 		return pkggin.R{

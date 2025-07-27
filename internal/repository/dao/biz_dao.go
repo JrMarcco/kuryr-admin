@@ -9,18 +9,19 @@ import (
 )
 
 type BizInfo struct {
-	Id           uint64
-	BizKey       string
-	BizSecret    string
-	BizName      string
-	Contact      string
-	ContactEmail string
-	CreatorId    uint64
-	CreatedAt    int64
-	UpdatedAt    int64
+	Id           uint64 `gorm:"column:id"`
+	BizType      string `gorm:"column:biz_type"`
+	BizKey       string `gorm:"column:biz_key"`
+	BizSecret    string `gorm:"column:biz_secret"`
+	BizName      string `gorm:"column:biz_name"`
+	Contact      string `gorm:"column:contact"`
+	ContactEmail string `gorm:"column:contact_email"`
+	CreatorId    uint64 `gorm:"column:creator_id"`
+	CreatedAt    int64  `gorm:"column:created_at"`
+	UpdatedAt    int64  `gorm:"column:updated_at"`
 }
 
-func (bi BizInfo) TableName() string {
+func (BizInfo) TableName() string {
 	return "biz_info"
 }
 

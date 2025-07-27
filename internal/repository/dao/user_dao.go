@@ -8,17 +8,17 @@ import (
 )
 
 type SysUser struct {
-	Id        uint64
-	Email     string
-	Password  string
-	RealName  string
-	UserType  string
-	BizId     uint64
-	CreatedAt int64
-	UpdatedAt int64
+	Id        uint64 `gorm:"column:id"`
+	Email     string `gorm:"column:email"`
+	Password  string `gorm:"column:password"`
+	RealName  string `gorm:"column:real_name"`
+	UserType  string `gorm:"column:user_type"`
+	BizId     uint64 `gorm:"column:biz_id"`
+	CreatedAt int64  `gorm:"column:created_at"`
+	UpdatedAt int64  `gorm:"column:updated_at"`
 }
 
-func (su SysUser) TableName() string {
+func (SysUser) TableName() string {
 	return "sys_user"
 }
 

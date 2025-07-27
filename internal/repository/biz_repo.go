@@ -96,6 +96,7 @@ func (r *DefaultBizRepo) FindById(ctx context.Context, id uint64) (domain.BizInf
 func (r *DefaultBizRepo) toDomain(entity dao.BizInfo) domain.BizInfo {
 	return domain.BizInfo{
 		Id:           entity.Id,
+		BizType:      domain.BizType(entity.BizType),
 		BizKey:       entity.BizKey,
 		BizSecret:    entity.BizSecret[:3] + "****" + entity.BizSecret[len(entity.BizSecret)-3:],
 		BizName:      entity.BizName,
@@ -109,6 +110,7 @@ func (r *DefaultBizRepo) toDomain(entity dao.BizInfo) domain.BizInfo {
 func (r *DefaultBizRepo) toEntity(bi domain.BizInfo) dao.BizInfo {
 	return dao.BizInfo{
 		Id:           bi.Id,
+		BizType:      bi.BizType.String(),
 		BizKey:       bi.BizKey,
 		BizSecret:    bi.BizSecret,
 		BizName:      bi.BizName,
