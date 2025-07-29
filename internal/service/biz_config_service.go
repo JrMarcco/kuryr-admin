@@ -132,7 +132,7 @@ func (s *DefaultBizConfigService) GetByBizId(ctx context.Context, id uint64) (do
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	resp, err := grpcClient.GetById(ctx, &configv1.GetByIdRequest{Id: id})
+	resp, err := grpcClient.FindById(ctx, &configv1.FindByIdRequest{Id: id})
 	cancel()
 
 	if err != nil {
