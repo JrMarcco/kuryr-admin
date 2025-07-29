@@ -15,7 +15,7 @@ import (
 
 type BizConfigService interface {
 	Save(ctx context.Context, bizConfig domain.BizConfig) error
-	GetByBizId(ctx context.Context, id uint64) (domain.BizConfig, error)
+	FindByBizId(ctx context.Context, id uint64) (domain.BizConfig, error)
 }
 
 var _ BizConfigService = (*DefaultBizConfigService)(nil)
@@ -68,7 +68,7 @@ func (s *DefaultBizConfigService) Save(ctx context.Context, bizConfig domain.Biz
 		return fmt.Errorf("[kuryr-admin] failed to save biz config: %w", err)
 	}
 	if !resp.Success {
-		return fmt.Errorf("[kuryr-admin] failed to save biz config: [%s]", resp.ErrMsg)
+		return fmt.Errorf("[kuryr-admin] failed to save biz config: [ %s ]", resp.ErrMsg)
 	}
 	return nil
 }
@@ -125,7 +125,7 @@ func (s *DefaultBizConfigService) convertToPbRetry(config *domain.RetryConfig) *
 	}
 }
 
-func (s *DefaultBizConfigService) GetByBizId(ctx context.Context, id uint64) (domain.BizConfig, error) {
+func (s *DefaultBizConfigService) FindByBizId(ctx context.Context, id uint64) (domain.BizConfig, error) {
 	grpcClient, err := s.grpcClients.Get(s.grpcServerName)
 	if err != nil {
 		return domain.BizConfig{}, fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)

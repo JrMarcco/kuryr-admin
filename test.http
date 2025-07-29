@@ -77,3 +77,30 @@ Content-Type: application/json
         }
     }
 }
+
+
+
+#### List Provider
+GET http://localhost:8080/api/v1/provider/list_all
+X-ACCESS-TOKEN: {{access_token}}
+
+
+
+#### Save Provider
+POST http://localhost:8080/api/v1/provider/save
+X-ACCESS-TOKEN: {{access_token}}
+Content-Type: application/json
+
+{
+    "provider_name": "test-provider",
+    "channel": 1,
+    "endpoint": "http://localhost:8090/v1/sms/send",
+    "region_id": "jrmarcco-local",
+    "app_id": "test-app-id",
+    "api_key": "test-app-key",
+    "api_secret": "test-app-secret",
+    "weight": 1,
+    "qps_limit": 100,
+    "daily_limit": 10,
+    "audit_callback_url": "http://localhost:8080/api/v1/callback"
+}

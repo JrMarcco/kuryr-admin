@@ -20,7 +20,7 @@ func (h *BizConfigHandler) RegisterRoutes(engine *gin.Engine) {
 	v1 := engine.Group("/api/v1/biz_config")
 
 	v1.Handle(http.MethodPost, "/save", pkggin.B(h.Save))
-	v1.Handle(http.MethodGet, "/get", pkggin.Q(h.Get))
+	v1.Handle(http.MethodGet, "/find", pkggin.Q(h.Find))
 }
 
 type saveBizConfigReq struct {
@@ -144,7 +144,7 @@ type getBizConfigReq struct {
 	BizId uint64 `json:"biz_id" form:"biz_id"`
 }
 
-func (h *BizConfigHandler) Get(ctx *gin.Context, req getBizConfigReq) (pkggin.R, error) {
+func (h *BizConfigHandler) Find(ctx *gin.Context, req getBizConfigReq) (pkggin.R, error) {
 	if req.BizId == 0 {
 		return pkggin.R{
 			Code: http.StatusBadRequest,
@@ -152,7 +152,7 @@ func (h *BizConfigHandler) Get(ctx *gin.Context, req getBizConfigReq) (pkggin.R,
 		}, nil
 	}
 
-	bizConfig, err := h.svc.GetByBizId(ctx, req.BizId)
+	bizConfig, err := h.svc.FindByBizId(ctx, req.BizId)
 	if err != nil {
 		return pkggin.R{
 			Code: http.StatusInternalServerError,

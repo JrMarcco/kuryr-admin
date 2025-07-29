@@ -97,7 +97,7 @@ func (s *DefaultBizService) Delete(ctx context.Context, id uint64) error {
 		return fmt.Errorf("[kuryr-admin] failed to delete biz config: %w", err)
 	}
 	if !resp.Success {
-		return fmt.Errorf("[kuryr-admin] failed to delete biz config: [%s]", resp.ErrMsg)
+		return fmt.Errorf("[kuryr-admin] failed to delete biz config: [ %s ]", resp.ErrMsg)
 	}
 
 	// 开启事务，删除业务以及对应操作员信息

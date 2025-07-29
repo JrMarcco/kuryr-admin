@@ -38,6 +38,13 @@ var HandlerFxOpt = fx.Provide(
 		fx.As(new(pkggin.RouteRegistry)),
 		fx.ResultTags(`group:"handler"`),
 	),
+
+	// provider handler
+	fx.Annotate(
+		web.NewProviderHandler,
+		fx.As(new(pkggin.RouteRegistry)),
+		fx.ResultTags(`group:"handler"`),
+	),
 )
 
 var HandlerFxInvoke = fx.Invoke(

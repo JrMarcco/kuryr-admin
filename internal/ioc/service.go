@@ -7,6 +7,7 @@ import (
 	"github.com/JrMarcco/kuryr-admin/internal/repository"
 	"github.com/JrMarcco/kuryr-admin/internal/service"
 	configv1 "github.com/JrMarcco/kuryr-api/api/config/v1"
+	providerv1 "github.com/JrMarcco/kuryr-api/api/provider/v1"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
 	"gorm.io/gorm"
@@ -35,6 +36,12 @@ var ServiceFxOpt = fx.Options(
 		fx.Annotate(
 			InitBizConfigService,
 			fx.As(new(service.BizConfigService)),
+		),
+
+		// provider service
+		fx.Annotate(
+			InitProviderService,
+			fx.As(new(service.ProviderService)),
 		),
 	),
 )
@@ -65,5 +72,13 @@ func InitBizConfigService(
 ) *service.DefaultBizConfigService {
 	return service.NewDefaultBizConfigService(
 		grpcServerNameBizConfig(), grpcClients, bizRepo,
+	)
+}
+
+func InitProviderService(
+	grpcClients *client.Manager[providerv1.ProviderServiceClient],
+) *service.DefaultProviderService {
+	return service.NewDefaultProviderService(
+		grpcServerNameBizConfig(), grpcClients,
 	)
 }
