@@ -1,9 +1,11 @@
 package web
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/JrMarcco/kuryr-admin/internal/errs"
 	pkggin "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/JrMarcco/kuryr-admin/internal/service"
 	"github.com/JrMarcco/kuryr-admin/internal/web/jwt"
@@ -42,27 +44,18 @@ type tokenResp struct {
 func (h *UserHandler) Login(ctx *gin.Context, req loginReq) (pkggin.R, error) {
 	au, err := h.svc.LoginWithType(ctx, req.Account, req.Credential, req.AccountType, req.VerifyType)
 	if err != nil {
-		return pkggin.R{
-			Code: http.StatusUnauthorized,
-			Msg:  err.Error(),
-		}, err
+		return pkggin.R{}, err
 	}
 
 	// 创建 session
 	err = h.CreateSession(ctx, au.Sid, au.Uid)
 	if err != nil {
-		return pkggin.R{
-			Code: http.StatusInternalServerError,
-			Msg:  err.Error(),
-		}, err
+		return pkggin.R{}, err
 	}
 
 	at, st, err := h.svc.GenerateToken(ctx, au)
 	if err != nil {
-		return pkggin.R{
-			Code: http.StatusInternalServerError,
-			Msg:  err.Error(),
-		}, err
+		return pkggin.R{}, err
 	}
 
 	return pkggin.R{
@@ -81,19 +74,13 @@ type refreshTokenReq struct {
 func (h *UserHandler) RefreshToken(ctx *gin.Context, req refreshTokenReq) (pkggin.R, error) {
 	au, err := h.svc.VerifyRefreshToken(ctx, req.RefreshToken)
 	if err != nil {
-		return pkggin.R{
-			Code: http.StatusUnauthorized,
-			Msg:  err.Error(),
-		}, err
+		return pkggin.R{}, fmt.Errorf("%w: %s", errs.ErrUnauthorized, err.Error())
 	}
 
 	// 校验 session
 	err = h.CheckSession(ctx, au.Sid, au.Uid)
 	if err != nil {
-		return pkggin.R{
-			Code: http.StatusUnauthorized,
-			Msg:  err.Error(),
-		}, err
+		return pkggin.R{}, fmt.Errorf("%w: %s", errs.ErrUnauthorized, err.Error())
 	}
 
 	// 刷新 session 的过期时间
@@ -106,10 +93,7 @@ func (h *UserHandler) RefreshToken(ctx *gin.Context, req refreshTokenReq) (pkggi
 	// 重新生成 access token 和 refresh token
 	at, st, err := h.svc.GenerateToken(ctx, au)
 	if err != nil {
-		return pkggin.R{
-			Code: http.StatusInternalServerError,
-			Msg:  err.Error(),
-		}, err
+		return pkggin.R{}, err
 	}
 	return pkggin.R{
 		Code: http.StatusOK,

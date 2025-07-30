@@ -7,7 +7,9 @@ import (
 	"github.com/JrMarcco/easy-kit/slice"
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
 	"github.com/JrMarcco/kuryr-admin/internal/errs"
+	pkggorm "github.com/JrMarcco/kuryr-admin/internal/pkg/gorm"
 	"github.com/JrMarcco/kuryr-admin/internal/repository/dao"
+	"github.com/JrMarcco/kuryr-admin/internal/search"
 	"gorm.io/gorm"
 )
 
@@ -15,8 +17,7 @@ type BizRepo interface {
 	SaveWithTx(ctx context.Context, tx *gorm.DB, bi domain.BizInfo) (domain.BizInfo, error)
 	DeleteWithTx(ctx context.Context, tx *gorm.DB, id uint64) error
 
-	Count(ctx context.Context) (int64, error)
-	List(ctx context.Context, offset, limit int) ([]domain.BizInfo, error)
+	Search(ctx context.Context, criteria search.BizSearchCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[domain.BizInfo], error)
 	FindById(ctx context.Context, id uint64) (domain.BizInfo, error)
 }
 
@@ -71,18 +72,21 @@ func (r *DefaultBizRepo) DeleteWithTx(ctx context.Context, tx *gorm.DB, id uint6
 	return r.dao.DeleteWithTx(ctx, tx, id)
 }
 
-func (r *DefaultBizRepo) Count(ctx context.Context) (int64, error) {
-	return r.dao.Count(ctx)
-}
-
-func (r *DefaultBizRepo) List(ctx context.Context, offset, limit int) ([]domain.BizInfo, error) {
-	entities, err := r.dao.List(ctx, offset, limit)
+func (r *DefaultBizRepo) Search(
+	ctx context.Context, criteria search.BizSearchCriteria, param *pkggorm.PaginationParam,
+) (*pkggorm.PaginationResult[domain.BizInfo], error) {
+	res, err := r.dao.Search(ctx, criteria, param)
 	if err != nil {
 		return nil, err
 	}
-	return slice.Map(entities, func(_ int, src dao.BizInfo) domain.BizInfo {
+
+	records := slice.Map(res.Records, func(idx int, src dao.BizInfo) domain.BizInfo {
 		return r.toDomain(src)
-	}), nil
+	})
+	return &pkggorm.PaginationResult[domain.BizInfo]{
+		Total:   res.Total,
+		Records: records,
+	}, nil
 }
 
 func (r *DefaultBizRepo) FindById(ctx context.Context, id uint64) (domain.BizInfo, error) {

@@ -132,10 +132,7 @@ func (h *BizConfigHandler) Save(ctx *gin.Context, req saveBizConfigReq) (pkggin.
 
 	err := h.svc.Save(ctx, bizConfig)
 	if err != nil {
-		return pkggin.R{
-			Code: http.StatusInternalServerError,
-			Msg:  err.Error(),
-		}, err
+		return pkggin.R{}, err
 	}
 	return pkggin.R{Code: http.StatusOK}, nil
 }
@@ -154,10 +151,7 @@ func (h *BizConfigHandler) Find(ctx *gin.Context, req getBizConfigReq) (pkggin.R
 
 	bizConfig, err := h.svc.FindByBizId(ctx, req.BizId)
 	if err != nil {
-		return pkggin.R{
-			Code: http.StatusInternalServerError,
-			Msg:  err.Error(),
-		}, err
+		return pkggin.R{}, err
 	}
 	return pkggin.R{
 		Code: http.StatusOK,

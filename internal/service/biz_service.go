@@ -7,8 +7,10 @@ import (
 
 	"github.com/JrMarcco/easy-grpc/client"
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
+	pkggorm "github.com/JrMarcco/kuryr-admin/internal/pkg/gorm"
 	"github.com/JrMarcco/kuryr-admin/internal/pkg/secret"
 	"github.com/JrMarcco/kuryr-admin/internal/repository"
+	"github.com/JrMarcco/kuryr-admin/internal/search"
 	configv1 "github.com/JrMarcco/kuryr-api/api/config/v1"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -18,8 +20,7 @@ type BizService interface {
 	Save(ctx context.Context, bi domain.BizInfo) (domain.BizInfo, error)
 	Delete(ctx context.Context, id uint64) error
 
-	Count(ctx context.Context) (int64, error)
-	List(ctx context.Context, offset, limit int) ([]domain.BizInfo, error)
+	Search(ctx context.Context, criteria search.BizSearchCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[domain.BizInfo], error)
 	FindById(ctx context.Context, id uint64) (domain.BizInfo, error)
 }
 
@@ -112,12 +113,8 @@ func (s *DefaultBizService) Delete(ctx context.Context, id uint64) error {
 	})
 }
 
-func (s *DefaultBizService) Count(ctx context.Context) (int64, error) {
-	return s.repo.Count(ctx)
-}
-
-func (s *DefaultBizService) List(ctx context.Context, offset, limit int) ([]domain.BizInfo, error) {
-	return s.repo.List(ctx, offset, limit)
+func (s *DefaultBizService) Search(ctx context.Context, criteria search.BizSearchCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[domain.BizInfo], error) {
+	return s.repo.Search(ctx, criteria, param)
 }
 
 func (s *DefaultBizService) FindById(ctx context.Context, id uint64) (domain.BizInfo, error) {

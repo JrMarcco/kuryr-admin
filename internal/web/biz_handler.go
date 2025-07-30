@@ -7,6 +7,8 @@ import (
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
 	"github.com/JrMarcco/kuryr-admin/internal/errs"
 	pkggin "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
+	pkggorm "github.com/JrMarcco/kuryr-admin/internal/pkg/gorm"
+	"github.com/JrMarcco/kuryr-admin/internal/search"
 	"github.com/JrMarcco/kuryr-admin/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -23,7 +25,7 @@ func (h *BizHandler) RegisterRoutes(engine *gin.Engine) {
 
 	v1.Handle(http.MethodPost, "/save", pkggin.BU(h.Save))
 	v1.Handle(http.MethodDelete, "/delete", pkggin.QU(h.Delete))
-	v1.Handle(http.MethodGet, "/list", pkggin.QU(h.List))
+	v1.Handle(http.MethodGet, "/search", pkggin.QU(h.Search))
 }
 
 type createBizReq struct {
@@ -53,10 +55,7 @@ func (h *BizHandler) Save(ctx *gin.Context, req createBizReq, au pkggin.AuthUser
 	}
 	bi, err := h.svc.Save(ctx, bi)
 	if err != nil {
-		return pkggin.R{
-			Code: http.StatusInternalServerError,
-			Msg:  err.Error(),
-		}, err
+		return pkggin.R{}, err
 	}
 	return pkggin.R{
 		Code: http.StatusOK,
@@ -77,43 +76,31 @@ func (h *BizHandler) Delete(ctx *gin.Context, req deleteBizReq, au pkggin.AuthUs
 	}
 	err := h.svc.Delete(ctx, req.BizId)
 	if err != nil {
-		return pkggin.R{
-			Code: http.StatusInternalServerError,
-			Msg:  err.Error(),
-		}, err
+		return pkggin.R{}, err
 	}
 	return pkggin.R{Code: http.StatusOK}, nil
 }
 
-type listBizReq struct {
-	Offset int `json:"offset" form:"offset"`
-	Limit  int `json:"limit" form:"limit"`
+type searchBizReq struct {
+	BizName string `json:"biz_name" form:"biz_name"`
+	*pkggorm.PaginationParam
 }
 
-type listBizResp struct {
-	Total   int64            `json:"total"`
-	Content []domain.BizInfo `json:"content"`
-}
-
-// List 分页查询业务方信息
-func (h *BizHandler) List(ctx *gin.Context, req listBizReq, au pkggin.AuthUser) (pkggin.R, error) {
-	var (
-		list  []domain.BizInfo
-		total int64
-		err   error
-	)
+// Search 分页查询业务方信息
+func (h *BizHandler) Search(ctx *gin.Context, req searchBizReq, au pkggin.AuthUser) (pkggin.R, error) {
+	var res *pkggorm.PaginationResult[domain.BizInfo]
+	var err error
 
 	switch au.UserType {
 	case domain.UserTypeAdmin:
-		list, err = h.svc.List(ctx, req.Offset, req.Limit)
-		if err == nil {
-			total, err = h.svc.Count(ctx)
+		criteria := search.BizSearchCriteria{
+			BizName: req.BizName,
 		}
+		res, err = h.svc.Search(ctx, criteria, req.PaginationParam)
 	case domain.UserTypeOperator:
 		var bizInfo domain.BizInfo
 		bizInfo, err = h.svc.FindById(ctx, au.Bid)
-		list = append(list, bizInfo)
-		total = 1
+		res = pkggorm.NewPaginationResult([]domain.BizInfo{bizInfo}, 1)
 	default:
 		return pkggin.R{}, errs.ErrUnknownUser
 	}
@@ -123,10 +110,7 @@ func (h *BizHandler) List(ctx *gin.Context, req listBizReq, au pkggin.AuthUser) 
 	}
 	return pkggin.R{
 		Code: http.StatusOK,
-		Data: listBizResp{
-			Total:   total,
-			Content: list,
-		},
+		Data: res,
 	}, nil
 }
 

@@ -19,7 +19,7 @@ func (h *ProviderHandler) RegisterRoutes(engine *gin.Engine) {
 	v1 := engine.Group("/api/v1/provider")
 
 	v1.Handle(http.MethodPost, "/save", pkggin.B(h.Save))
-	v1.Handle(http.MethodGet, "/list_all", pkggin.W(h.List))
+	v1.Handle(http.MethodGet, "/list", pkggin.Q(h.List))
 }
 
 type saveProviderReq struct {
@@ -65,7 +65,17 @@ func (h *ProviderHandler) Save(ctx *gin.Context, req saveProviderReq) (pkggin.R,
 	return pkggin.R{Code: http.StatusOK}, nil
 }
 
-func (h *ProviderHandler) List(ctx *gin.Context) (pkggin.R, error) {
+type listProviderReq struct {
+	Offset int `json:"offset" form:"offset"`
+	Limit  int `json:"limit" form:"limit"`
+}
+
+type listProviderResp struct {
+	Total   int64             `json:"total"`
+	Content []domain.Provider `json:"content"`
+}
+
+func (h *ProviderHandler) List(ctx *gin.Context, req listProviderReq) (pkggin.R, error) {
 	providers, err := h.svc.List(ctx)
 	if err != nil {
 		return pkggin.R{
@@ -76,7 +86,10 @@ func (h *ProviderHandler) List(ctx *gin.Context) (pkggin.R, error) {
 
 	return pkggin.R{
 		Code: http.StatusOK,
-		Data: providers,
+		Data: listProviderResp{
+			Total:   int64(len(providers)),
+			Content: providers,
+		},
 	}, nil
 }
 

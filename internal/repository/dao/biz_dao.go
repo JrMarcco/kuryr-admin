@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	pkggorm "github.com/JrMarcco/kuryr-admin/internal/pkg/gorm"
+	"github.com/JrMarcco/kuryr-admin/internal/search"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -29,8 +31,7 @@ type BizDao interface {
 	SaveWithTx(ctx context.Context, tx *gorm.DB, entity BizInfo) (BizInfo, error)
 	DeleteWithTx(ctx context.Context, tx *gorm.DB, id uint64) error
 
-	Count(ctx context.Context) (int64, error)
-	List(ctx context.Context, offset, limit int) ([]BizInfo, error)
+	Search(ctx context.Context, criteria search.BizSearchCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[BizInfo], error)
 	FindById(ctx context.Context, id uint64) (BizInfo, error)
 }
 
@@ -67,19 +68,14 @@ func (d *DefaultBizDao) DeleteWithTx(ctx context.Context, tx *gorm.DB, id uint64
 		Delete(&BizInfo{}).Error
 }
 
-func (d *DefaultBizDao) Count(ctx context.Context) (int64, error) {
-	var count int64
-	err := d.db.WithContext(ctx).Model(&BizInfo{}).Count(&count).Error
-	return count, err
-}
+func (d *DefaultBizDao) Search(ctx context.Context, criteria search.BizSearchCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[BizInfo], error) {
+	var records []BizInfo
 
-func (d *DefaultBizDao) List(ctx context.Context, offset, limit int) ([]BizInfo, error) {
-	var bis []BizInfo
-	err := d.db.WithContext(ctx).Model(&BizInfo{}).
-		Offset(offset).
-		Limit(limit).
-		Find(&bis).Error
-	return bis, err
+	query := d.db.WithContext(ctx).Model(&BizInfo{})
+	if criteria.BizName != "" {
+		query = query.Where("biz_name like ?", pkggorm.BuildLikePattern(criteria.BizName))
+	}
+	return pkggorm.Pagination(query, param, records)
 }
 
 func (d *DefaultBizDao) FindById(ctx context.Context, id uint64) (BizInfo, error) {
