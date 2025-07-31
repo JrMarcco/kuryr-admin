@@ -8,13 +8,15 @@ import (
 	"github.com/JrMarcco/easy-grpc/client"
 	"github.com/JrMarcco/easy-kit/slice"
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
+	pkggorm "github.com/JrMarcco/kuryr-admin/internal/pkg/gorm"
+	"github.com/JrMarcco/kuryr-admin/internal/search"
 	commonv1 "github.com/JrMarcco/kuryr-api/api/common/v1"
 	providerv1 "github.com/JrMarcco/kuryr-api/api/provider/v1"
 )
 
 type ProviderService interface {
 	Save(ctx context.Context, provider domain.Provider) error
-	List(ctx context.Context) ([]domain.Provider, error)
+	Search(ctx context.Context, criteria search.ProviderCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[domain.Provider], error)
 }
 
 var _ ProviderService = (*DefaultProviderService)(nil)
@@ -53,35 +55,49 @@ func (s *DefaultProviderService) domainToPb(provider domain.Provider) *providerv
 		AppId:            provider.AppId,
 		ApiKey:           provider.ApiKey,
 		ApiSecret:        provider.ApiSecret,
-		Weight:           int32(provider.Weight),
-		QpsLimit:         int32(provider.QpsLimit),
-		DailyLimit:       int32(provider.DailyLimit),
+		Weight:           provider.Weight,
+		QpsLimit:         provider.QpsLimit,
+		DailyLimit:       provider.DailyLimit,
 		AuditCallbackUrl: provider.AuditCallbackUrl,
 	}
 }
 
-func (s *DefaultProviderService) List(ctx context.Context) ([]domain.Provider, error) {
+func (s *DefaultProviderService) Search(ctx context.Context, criteria search.ProviderCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[domain.Provider], error) {
 	grpcClient, err := s.grpcClients.Get(s.grpcServerName)
 	if err != nil {
 		return nil, fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
 	}
 
+	if param == nil {
+		param = &pkggorm.PaginationParam{
+			Offset: 0,
+			Limit:  10,
+		}
+	}
+
+	req := &providerv1.SearchRequest{
+		ProviderName: criteria.ProviderName,
+		Channel:      commonv1.Channel(criteria.Channel),
+		Offset:       int32(param.Offset),
+		Limit:        int32(param.Limit),
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	resp, err := grpcClient.List(ctx, &providerv1.ListRequest{})
+	resp, err := grpcClient.Search(ctx, req)
 	cancel()
 
 	if err != nil {
-		return nil, fmt.Errorf("[kuryr-admin] failed to list providers: %w", err)
+		return nil, fmt.Errorf("[kuryr-admin] failed to search providers: %w", err)
 	}
 
-	if len(resp.Providers) == 0 {
-		return []domain.Provider{}, nil
+	if resp.Total == 0 {
+		return pkggorm.NewPaginationResult[domain.Provider]([]domain.Provider{}, 0), nil
 	}
 
 	providers := slice.Map(resp.Providers, func(_ int, src *providerv1.Provider) domain.Provider {
 		return s.pbToDomain(src)
 	})
-	return providers, nil
+	return pkggorm.NewPaginationResult(providers, resp.Total), nil
 }
 
 func (s *DefaultProviderService) pbToDomain(pb *providerv1.Provider) domain.Provider {
@@ -94,9 +110,9 @@ func (s *DefaultProviderService) pbToDomain(pb *providerv1.Provider) domain.Prov
 		AppId:            pb.AppId,
 		ApiKey:           pb.ApiKey,
 		ApiSecret:        pb.ApiSecret,
-		Weight:           int(pb.Weight),
-		QpsLimit:         int(pb.QpsLimit),
-		DailyLimit:       int(pb.DailyLimit),
+		Weight:           pb.Weight,
+		QpsLimit:         pb.QpsLimit,
+		DailyLimit:       pb.DailyLimit,
 		AuditCallbackUrl: pb.AuditCallbackUrl,
 		ActiveStatus:     pb.ActiveStatus,
 	}

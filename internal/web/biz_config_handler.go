@@ -1,10 +1,12 @@
 package web
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
+	"github.com/JrMarcco/kuryr-admin/internal/errs"
 	pkggin "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/JrMarcco/kuryr-admin/internal/service"
 	"github.com/gin-gonic/gin"
@@ -28,7 +30,7 @@ type saveBizConfigReq struct {
 	ChannelConfig  *channelConfig  `json:"channel_config,omitempty"`
 	QuotaConfig    *quotaConfig    `json:"quota_config,omitempty"`
 	CallbackConfig *callbackConfig `json:"callback_config,omitempty"`
-	RateLimit      int             `json:"rate_limit"`
+	RateLimit      int32           `json:"rate_limit"`
 }
 
 type channelConfig struct {
@@ -37,9 +39,9 @@ type channelConfig struct {
 }
 
 type channelItem struct {
-	Channel  string `json:"channel"`
-	Priority int    `json:"priority"`
-	Enabled  bool   `json:"enabled"`
+	Channel  int32 `json:"channel"`
+	Priority int32 `json:"priority"`
+	Enabled  bool  `json:"enabled"`
 }
 
 type quotaConfig struct {
@@ -48,7 +50,7 @@ type quotaConfig struct {
 }
 
 type quota struct {
-	SMS   int32 `json:"sms"`
+	Sms   int32 `json:"sms"`
 	Email int32 `json:"email"`
 }
 
@@ -108,11 +110,11 @@ func (h *BizConfigHandler) Save(ctx *gin.Context, req saveBizConfigReq) (pkggin.
 	if req.QuotaConfig != nil {
 		bizConfig.QuotaConfig = &domain.QuotaConfig{
 			Daily: &domain.Quota{
-				SMS:   req.QuotaConfig.Daily.SMS,
+				Sms:   req.QuotaConfig.Daily.Sms,
 				Email: req.QuotaConfig.Daily.Email,
 			},
 			Monthly: &domain.Quota{
-				SMS:   req.QuotaConfig.Monthly.SMS,
+				Sms:   req.QuotaConfig.Monthly.Sms,
 				Email: req.QuotaConfig.Monthly.Email,
 			},
 		}
@@ -151,6 +153,9 @@ func (h *BizConfigHandler) Find(ctx *gin.Context, req getBizConfigReq) (pkggin.R
 
 	bizConfig, err := h.svc.FindByBizId(ctx, req.BizId)
 	if err != nil {
+		if errors.Is(err, errs.ErrRecordNotFound) {
+			return pkggin.R{Code: http.StatusOK}, nil
+		}
 		return pkggin.R{}, err
 	}
 	return pkggin.R{

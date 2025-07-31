@@ -5,6 +5,8 @@ import (
 
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
 	pkggin "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
+	pkggorm "github.com/JrMarcco/kuryr-admin/internal/pkg/gorm"
+	"github.com/JrMarcco/kuryr-admin/internal/search"
 	"github.com/JrMarcco/kuryr-admin/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -19,7 +21,7 @@ func (h *ProviderHandler) RegisterRoutes(engine *gin.Engine) {
 	v1 := engine.Group("/api/v1/provider")
 
 	v1.Handle(http.MethodPost, "/save", pkggin.B(h.Save))
-	v1.Handle(http.MethodGet, "/list", pkggin.Q(h.List))
+	v1.Handle(http.MethodGet, "/search", pkggin.Q(h.Search))
 }
 
 type saveProviderReq struct {
@@ -33,9 +35,9 @@ type saveProviderReq struct {
 	ApiKey    string `json:"api_key"`
 	ApiSecret string `json:"api_secret"`
 
-	Weight     int `json:"weight"`
-	QpsLimit   int `json:"qps_limit"`
-	DailyLimit int `json:"daily_limit"`
+	Weight     int32 `json:"weight"`
+	QpsLimit   int32 `json:"qps_limit"`
+	DailyLimit int32 `json:"daily_limit"`
 
 	AuditCallbackUrl string `json:"audit_callback_url"`
 }
@@ -57,39 +59,33 @@ func (h *ProviderHandler) Save(ctx *gin.Context, req saveProviderReq) (pkggin.R,
 
 	err := h.svc.Save(ctx, provider)
 	if err != nil {
-		return pkggin.R{
-			Code: http.StatusInternalServerError,
-			Msg:  err.Error(),
-		}, err
+		return pkggin.R{}, err
 	}
 	return pkggin.R{Code: http.StatusOK}, nil
 }
 
 type listProviderReq struct {
-	Offset int `json:"offset" form:"offset"`
-	Limit  int `json:"limit" form:"limit"`
+	ProviderName string `json:"provider_name" form:"provider_name"`
+	Channel      int32  `json:"channel" form:"channel"`
+	*pkggorm.PaginationParam
 }
 
-type listProviderResp struct {
-	Total   int64             `json:"total"`
-	Content []domain.Provider `json:"content"`
-}
+func (h *ProviderHandler) Search(ctx *gin.Context, req listProviderReq) (pkggin.R, error) {
+	res, err := h.svc.Search(ctx, search.ProviderCriteria{
+		ProviderName: req.ProviderName,
+		Channel:      req.Channel,
+	}, &pkggorm.PaginationParam{
+		Offset: req.Offset,
+		Limit:  req.Limit,
+	})
 
-func (h *ProviderHandler) List(ctx *gin.Context, req listProviderReq) (pkggin.R, error) {
-	providers, err := h.svc.List(ctx)
 	if err != nil {
-		return pkggin.R{
-			Code: http.StatusInternalServerError,
-			Msg:  err.Error(),
-		}, err
+		return pkggin.R{}, err
 	}
 
 	return pkggin.R{
 		Code: http.StatusOK,
-		Data: listProviderResp{
-			Total:   int64(len(providers)),
-			Content: providers,
-		},
+		Data: res,
 	}, nil
 }
 

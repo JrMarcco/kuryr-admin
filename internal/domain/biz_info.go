@@ -7,16 +7,13 @@ const (
 	BizTypeOrganization BizType = "organization"
 )
 
-func (bt BizType) String() string {
-	return string(bt)
-}
-
 func (bt BizType) IsValid() bool {
 	switch bt {
 	case BizTypeIndividual, BizTypeOrganization:
 		return true
+	default:
+		return false
 	}
-	return false
 }
 
 func (bt BizType) IsIndividual() bool {

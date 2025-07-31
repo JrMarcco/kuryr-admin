@@ -5,7 +5,7 @@ go 1.24.5
 require (
 	github.com/JrMarcco/easy-grpc v0.0.13
 	github.com/JrMarcco/easy-kit v0.0.7
-	github.com/JrMarcco/kuryr-api v0.0.12
+	github.com/JrMarcco/kuryr-api v0.0.14
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-gonic/gin v1.10.1

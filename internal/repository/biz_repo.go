@@ -80,6 +80,10 @@ func (r *DefaultBizRepo) Search(
 		return nil, err
 	}
 
+	if res.Total == 0 {
+		return pkggorm.NewPaginationResult([]domain.BizInfo{}, 0), nil
+	}
+
 	records := slice.Map(res.Records, func(idx int, src dao.BizInfo) domain.BizInfo {
 		return r.toDomain(src)
 	})
@@ -114,7 +118,7 @@ func (r *DefaultBizRepo) toDomain(entity dao.BizInfo) domain.BizInfo {
 func (r *DefaultBizRepo) toEntity(bi domain.BizInfo) dao.BizInfo {
 	return dao.BizInfo{
 		Id:           bi.Id,
-		BizType:      bi.BizType.String(),
+		BizType:      string(bi.BizType),
 		BizKey:       bi.BizKey,
 		BizSecret:    bi.BizSecret,
 		BizName:      bi.BizName,

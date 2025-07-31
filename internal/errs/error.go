@@ -5,6 +5,8 @@ import "errors"
 var (
 	ErrUnauthorized = errors.New("[kuryr-admin] unauthorized")
 
+	ErrRecordNotFound = errors.New("[kuryr-admin] record not found")
+
 	ErrInvalidAccountType = errors.New("[kuryr-admin] invalid account type")
 	ErrInvalidVerifyType  = errors.New("[kuryr-admin] invalid verify type")
 

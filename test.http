@@ -27,7 +27,7 @@ Content-Type: application/json
 
 
 #### Search Biz
-GET http://localhost:8080/api/v1/biz/search?offset=0&limit=10&biz_name=est
+GET http://localhost:8080/api/v1/biz/search?offset=0&limit=10
 X-ACCESS-TOKEN: {{access_token}}
 
 
@@ -47,7 +47,7 @@ Content-Type: application/json
     "channel_config": {
         "channels": [
             {
-                "channel": "email",
+                "channel": 2,
                 "priority": 1,
                 "enabled": true
             }
@@ -92,7 +92,7 @@ X-ACCESS-TOKEN: {{access_token}}
 Content-Type: application/json
 
 {
-    "provider_name": "test-provider",
+    "provider_name": "测试供应商",
     "channel": 1,
     "endpoint": "http://localhost:8090/v1/sms/send",
     "region_id": "jrmarcco-local",

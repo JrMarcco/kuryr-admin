@@ -3,10 +3,6 @@ package domain
 // UserType 用户类型
 type UserType string
 
-func (ut UserType) String() string {
-	return string(ut)
-}
-
 const (
 	UserTypeAdmin    UserType = "administrator"
 	UserTypeOperator UserType = "operator"

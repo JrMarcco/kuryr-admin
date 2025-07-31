@@ -27,7 +27,7 @@ func (r *DefaultUserRepo) SaveWithTx(ctx context.Context, tx *gorm.DB, u domain.
 		Email:     u.Email,
 		Password:  u.Password,
 		RealName:  u.RealName,
-		UserType:  u.UserType.String(),
+		UserType:  string(u.UserType),
 		BizId:     u.BizId,
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,

@@ -8,7 +8,9 @@ import (
 
 	"github.com/JrMarcco/easy-grpc/client"
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
+	"github.com/JrMarcco/kuryr-admin/internal/errs"
 	"github.com/JrMarcco/kuryr-admin/internal/repository"
+	commonv1 "github.com/JrMarcco/kuryr-api/api/common/v1"
 	configv1 "github.com/JrMarcco/kuryr-api/api/config/v1"
 	"gorm.io/gorm"
 )
@@ -45,8 +47,8 @@ func (s *DefaultBizConfigService) Save(ctx context.Context, bizConfig domain.Biz
 	// 构建 grpc 请求
 	pb := &configv1.BizConfig{
 		BizId:     bi.Id,
-		OwnerType: bi.BizType.String(),
-		RateLimit: int32(bizConfig.RateLimit),
+		OwnerType: string(bizConfig.OwnerType),
+		RateLimit: bizConfig.RateLimit,
 	}
 
 	if bizConfig.ChannelConfig != nil {
@@ -78,7 +80,7 @@ func (s *DefaultBizConfigService) convertToPbChannel(config *domain.ChannelConfi
 	pbItems := make([]*configv1.ChannelItem, len(config.Channels))
 	for i, item := range config.Channels {
 		pbItems[i] = &configv1.ChannelItem{
-			Channel:  item.Channel,
+			Channel:  commonv1.Channel(item.Channel),
 			Priority: int32(item.Priority),
 			Enabled:  item.Enabled,
 		}
@@ -95,13 +97,13 @@ func (s *DefaultBizConfigService) convertToQuota(config *domain.QuotaConfig) *co
 	quota := &configv1.QuotaConfig{}
 	if config.Daily != nil {
 		quota.Daily = &configv1.Quota{
-			Sms:   config.Daily.SMS,
+			Sms:   config.Daily.Sms,
 			Email: config.Daily.Email,
 		}
 	}
 	if config.Monthly != nil {
 		quota.Monthly = &configv1.Quota{
-			Sms:   config.Monthly.SMS,
+			Sms:   config.Monthly.Sms,
 			Email: config.Monthly.Email,
 		}
 	}
@@ -138,7 +140,9 @@ func (s *DefaultBizConfigService) FindByBizId(ctx context.Context, id uint64) (d
 	if err != nil {
 		return domain.BizConfig{}, fmt.Errorf("[kuryr-admin] failed to get biz config: %w", err)
 	}
-
+	if resp.ErrCode == commonv1.ErrCode_BIZ_CONFIG_NOT_FOUND {
+		return domain.BizConfig{}, errs.ErrRecordNotFound
+	}
 	return s.pbToDomain(resp.Config), nil
 }
 
@@ -146,7 +150,7 @@ func (s *DefaultBizConfigService) pbToDomain(pb *configv1.BizConfig) domain.BizC
 	bizConfig := domain.BizConfig{
 		Id:        pb.BizId,
 		OwnerType: domain.BizType(pb.OwnerType),
-		RateLimit: int(pb.RateLimit),
+		RateLimit: pb.RateLimit,
 	}
 
 	if pb.ChannelConfig != nil {
@@ -156,8 +160,8 @@ func (s *DefaultBizConfigService) pbToDomain(pb *configv1.BizConfig) domain.BizC
 
 		for index, item := range pb.ChannelConfig.Items {
 			channelConfig.Channels[index] = domain.ChannelItem{
-				Channel:  item.Channel,
-				Priority: int(item.Priority),
+				Channel:  int32(item.Channel),
+				Priority: item.Priority,
 				Enabled:  item.Enabled,
 			}
 		}
@@ -174,14 +178,14 @@ func (s *DefaultBizConfigService) pbToDomain(pb *configv1.BizConfig) domain.BizC
 		if pb.QuotaConfig.Daily != nil {
 			dailyQuota := pb.QuotaConfig.Daily
 			quotaConfig.Daily = &domain.Quota{
-				SMS:   dailyQuota.Sms,
+				Sms:   dailyQuota.Sms,
 				Email: dailyQuota.Email,
 			}
 		}
 		if pb.QuotaConfig.Monthly != nil {
 			monthlyQuota := pb.QuotaConfig.Monthly
 			quotaConfig.Monthly = &domain.Quota{
-				SMS:   monthlyQuota.Sms,
+				Sms:   monthlyQuota.Sms,
 				Email: monthlyQuota.Email,
 			}
 		}

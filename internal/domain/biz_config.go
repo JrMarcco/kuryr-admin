@@ -9,7 +9,7 @@ type BizConfig struct {
 	ChannelConfig  *ChannelConfig  `json:"channel_config"` // 渠道配置
 	QuotaConfig    *QuotaConfig    `json:"quota_config"`   // 配额配置
 	CallbackConfig *CallbackConfig `json:"callback_config"`
-	RateLimit      int             `json:"rate_limit"`
+	RateLimit      int32           `json:"rate_limit"`
 }
 
 type RetryConfig struct {
@@ -19,9 +19,9 @@ type RetryConfig struct {
 }
 
 type ChannelItem struct {
-	Channel  string `json:"channel"`
-	Priority int    `json:"priority"`
-	Enabled  bool   `json:"enabled"`
+	Channel  int32 `json:"channel"`
+	Priority int32 `json:"priority"`
+	Enabled  bool  `json:"enabled"`
 }
 
 type ChannelConfig struct {
@@ -30,7 +30,7 @@ type ChannelConfig struct {
 }
 
 type Quota struct {
-	SMS   int32 `json:"sms"`
+	Sms   int32 `json:"sms"`
 	Email int32 `json:"email"`
 }
 
