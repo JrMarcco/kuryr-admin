@@ -1,3 +1,32 @@
+-- 业务信息表
+DROP TABLE IF EXISTS biz_info;
+CREATE TABLE biz_info (
+    id BIGSERIAL PRIMARY KEY,
+    biz_type biz_type_enum NOT NULL,
+    biz_key VARCHAR(64) NOT NULL,
+    biz_secret VARCHAR(128) NOT NULL,
+    biz_name VARCHAR(128) NOT NULL,
+    contact varchar(64) NOT NULL,
+    contact_email varchar(128) NOT NULL,
+    creator_id BIGINT NOT NULL,
+    created_at BIGINT NOT NULL,
+    updated_at BIGINT NOT NULL,
+    CONSTRAINT uk_biz_key UNIQUE (biz_key)
+);
+
+COMMENT ON TABLE biz_info IS '业务信息表';
+COMMENT ON COLUMN biz_info.id IS 'id';
+COMMENT ON COLUMN biz_info.biz_type IS '业务类型';
+COMMENT ON COLUMN biz_info.biz_key IS '业务 key 用于识别业务方身份';
+COMMENT ON COLUMN biz_info.biz_secret IS '业务密钥 用于认证';
+COMMENT ON COLUMN biz_info.biz_name IS '业务名';
+COMMENT ON COLUMN biz_info.contact IS '业务联系人';
+COMMENT ON COLUMN biz_info.contact_email IS '联系人邮箱';
+COMMENT ON COLUMN biz_info.creator_id IS '创建人 id';
+COMMENT ON COLUMN biz_info.created_at IS '创建时间戳 ( Unix 毫秒值 )';
+COMMENT ON COLUMN biz_info.updated_at IS '更新时间戳 ( Unix 毫秒值 )';
+
+-- 系统用户信息表
 DROP TABLE IF EXISTS sys_user;
 CREATE TABLE sys_user (
     id BIGSERIAL PRIMARY KEY,
@@ -11,7 +40,8 @@ CREATE TABLE sys_user (
     CONSTRAINT uk_email UNIQUE (email)
 );
 
-COMMENT ON TABLE sys_user IS '用户信息表';
+COMMENT ON TABLE sys_user IS '系统用户信息表';
+COMMENT ON COLUMN sys_user.id IS 'id';
 COMMENT ON COLUMN sys_user.email IS '邮箱';
 COMMENT ON COLUMN sys_user.password IS '密码（请存储哈希后的值）';
 COMMENT ON COLUMN sys_user.real_name IS '用户姓名';
@@ -38,30 +68,3 @@ INSERT INTO sys_user (
     EXTRACT(EPOCH FROM NOW()) * 1000,
     EXTRACT(EPOCH FROM NOW()) * 1000
 );
-
-DROP TABLE IF EXISTS biz_info;
-CREATE TABLE biz_info (
-    id BIGSERIAL PRIMARY KEY,
-    biz_type biz_type_enum NOT NULL,
-    biz_key VARCHAR(64) NOT NULL,
-    biz_secret VARCHAR(128) NOT NULL,
-    biz_name VARCHAR(128) NOT NULL,
-    contact varchar(64) NOT NULL,
-    contact_email varchar(128) NOT NULL,
-    creator_id BIGINT NOT NULL,
-    created_at BIGINT NOT NULL,
-    updated_at BIGINT NOT NULL,
-    CONSTRAINT uk_biz_key UNIQUE (biz_key)
-);
-
--- 添加表注释
-COMMENT ON TABLE biz_info IS '业务信息表';
-COMMENT ON COLUMN biz_info.biz_type IS '业务类型';
-COMMENT ON COLUMN biz_info.biz_key IS '业务 key 用于识别业务方身份';
-COMMENT ON COLUMN biz_info.biz_secret IS '业务密钥 用于认证';
-COMMENT ON COLUMN biz_info.biz_name IS '业务名';
-COMMENT ON COLUMN biz_info.contact IS '业务联系人';
-COMMENT ON COLUMN biz_info.contact_email IS '联系人邮箱';
-COMMENT ON COLUMN biz_info.creator_id IS '创建人 id';
-COMMENT ON COLUMN biz_info.created_at IS '创建时间戳 ( Unix 毫秒值 )';
-COMMENT ON COLUMN biz_info.updated_at IS '更新时间戳 ( Unix 毫秒值 )';

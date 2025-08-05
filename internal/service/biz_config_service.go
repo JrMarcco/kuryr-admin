@@ -81,7 +81,7 @@ func (s *DefaultBizConfigService) convertToPbChannel(config *domain.ChannelConfi
 	for i, item := range config.Channels {
 		pbItems[i] = &configv1.ChannelItem{
 			Channel:  commonv1.Channel(item.Channel),
-			Priority: int32(item.Priority),
+			Priority: item.Priority,
 			Enabled:  item.Enabled,
 		}
 	}
