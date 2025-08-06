@@ -16,15 +16,20 @@ CREATE TABLE biz_info (
 
 COMMENT ON TABLE biz_info IS '业务信息表';
 COMMENT ON COLUMN biz_info.id IS 'id';
+COMMENT ON COLUMN biz_info.biz_name IS '业务名';
 COMMENT ON COLUMN biz_info.biz_type IS '业务类型';
 COMMENT ON COLUMN biz_info.biz_key IS '业务 key 用于识别业务方身份';
 COMMENT ON COLUMN biz_info.biz_secret IS '业务密钥 用于认证';
-COMMENT ON COLUMN biz_info.biz_name IS '业务名';
 COMMENT ON COLUMN biz_info.contact IS '业务联系人';
 COMMENT ON COLUMN biz_info.contact_email IS '联系人邮箱';
 COMMENT ON COLUMN biz_info.creator_id IS '创建人 id';
 COMMENT ON COLUMN biz_info.created_at IS '创建时间戳 ( Unix 毫秒值 )';
 COMMENT ON COLUMN biz_info.updated_at IS '更新时间戳 ( Unix 毫秒值 )';
+
+-- 字段索引：业务名
+-- 查询场景：where biz_name like '%?%'
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX idx_biz_info_biz_name_gin ON biz_info USING gin(biz_name gin_trgm_ops);
 
 -- 系统用户信息表
 DROP TABLE IF EXISTS sys_user;
