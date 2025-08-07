@@ -5,8 +5,6 @@ import (
 
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
 	pkggin "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
-	pkggorm "github.com/JrMarcco/kuryr-admin/internal/pkg/gorm"
-	"github.com/JrMarcco/kuryr-admin/internal/search"
 	"github.com/JrMarcco/kuryr-admin/internal/service"
 	"github.com/gin-gonic/gin"
 )
@@ -21,7 +19,8 @@ func (h *ProviderHandler) RegisterRoutes(engine *gin.Engine) {
 	v1 := engine.Group("/api/v1/provider")
 
 	v1.Handle(http.MethodPost, "/save", pkggin.B(h.Save))
-	v1.Handle(http.MethodGet, "/search", pkggin.Q(h.Search))
+	v1.Handle(http.MethodGet, "/list", pkggin.W(h.List))
+	v1.Handle(http.MethodGet, "/find-by-channel", pkggin.Q(h.FindByChannel))
 }
 
 type saveProviderReq struct {
@@ -64,21 +63,24 @@ func (h *ProviderHandler) Save(ctx *gin.Context, req saveProviderReq) (pkggin.R,
 	return pkggin.R{Code: http.StatusOK}, nil
 }
 
-type listProviderReq struct {
-	ProviderName string `json:"provider_name" form:"provider_name"`
-	Channel      int32  `json:"channel" form:"channel"`
-	*pkggorm.PaginationParam
+func (h *ProviderHandler) List(ctx *gin.Context) (pkggin.R, error) {
+	res, err := h.svc.List(ctx)
+	if err != nil {
+		return pkggin.R{}, err
+	}
+
+	return pkggin.R{
+		Code: http.StatusOK,
+		Data: res,
+	}, nil
 }
 
-func (h *ProviderHandler) Search(ctx *gin.Context, req listProviderReq) (pkggin.R, error) {
-	res, err := h.svc.Search(ctx, search.ProviderCriteria{
-		ProviderName: req.ProviderName,
-		Channel:      req.Channel,
-	}, &pkggorm.PaginationParam{
-		Offset: req.Offset,
-		Limit:  req.Limit,
-	})
+type findByChannelReq struct {
+	Channel int32 `json:"channel" form:"channel"`
+}
 
+func (h *ProviderHandler) FindByChannel(ctx *gin.Context, req findByChannelReq) (pkggin.R, error) {
+	res, err := h.svc.FindByChannel(ctx, req.Channel)
 	if err != nil {
 		return pkggin.R{}, err
 	}
