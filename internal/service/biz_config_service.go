@@ -17,6 +17,7 @@ import (
 
 type BizConfigService interface {
 	Save(ctx context.Context, bizConfig domain.BizConfig) error
+	Delete(ctx context.Context, id uint64) error
 	FindByBizId(ctx context.Context, id uint64) (domain.BizConfig, error)
 }
 
@@ -71,6 +72,26 @@ func (s *DefaultBizConfigService) Save(ctx context.Context, bizConfig domain.Biz
 	}
 	if !resp.Success {
 		return fmt.Errorf("[kuryr-admin] failed to save biz config: [ %s ]", resp.ErrMsg)
+	}
+	return nil
+}
+
+func (s *DefaultBizConfigService) Delete(ctx context.Context, id uint64) error {
+	// 删除 biz config
+	grpcClient, err := s.grpcClients.Get(s.grpcServerName)
+	if err != nil {
+		return fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	resp, err := grpcClient.Delete(ctx, &configv1.DeleteRequest{Id: id})
+	cancel()
+
+	if err != nil {
+		return fmt.Errorf("[kuryr-admin] failed to delete biz config: %w", err)
+	}
+	if !resp.Success {
+		return fmt.Errorf("[kuryr-admin] failed to delete biz config: [ %s ]", resp.ErrMsg)
 	}
 	return nil
 }

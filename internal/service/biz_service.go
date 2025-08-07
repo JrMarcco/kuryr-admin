@@ -72,6 +72,9 @@ func (s *DefaultBizService) Save(ctx context.Context, bi domain.BizInfo) (domain
 			}
 
 			_, innerErr = s.userRepo.SaveWithTx(ctx, tx, operator)
+			if innerErr != nil {
+				return innerErr
+			}
 		}
 		bi.Id = res.Id
 		return nil
