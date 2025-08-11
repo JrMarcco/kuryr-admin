@@ -38,7 +38,7 @@ type lbConfig struct {
 
 func loadLoadBalanceConfig() *lbConfig {
 	cfg := &lbConfig{}
-	if err := viper.UnmarshalKey("load_balance", &cfg); err != nil {
+	if err := viper.UnmarshalKey("grpc.client.load_balance", &cfg); err != nil {
 		panic(err)
 	}
 	return cfg

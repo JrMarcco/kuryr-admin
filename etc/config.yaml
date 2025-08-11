@@ -66,10 +66,12 @@ etcd:
 registry:
   lease_ttl: 30 # 单位：秒，这里和 etcd api 保持一直所以是秒单位
 
-load_balance:
-  name: "read_write_weight"
-  timeout: 3000                       # 单位：毫秒
-  keep_alive:
-    time: 600000                      # 单位：毫秒
-    timeout: 10000                    # 单位：毫秒
-    permit_without_stream: true
+grpc:
+  client:
+    load_balance:
+      name: "read_write_weight"           # 负载均衡 resolver 名称
+      timeout: 3000                       # grpc 请求超时时间，单位：毫秒
+      keep_alive:
+        time: 600000                      # keep alive 请求间隔时间，单位：毫秒
+        timeout: 10000                    # keep alive 请求超时时间，单位：毫秒
+        permit_without_stream: true
