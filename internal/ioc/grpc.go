@@ -18,10 +18,13 @@ import (
 	"google.golang.org/grpc/keepalive"
 )
 
-var GrpcClientFxOpt = fx.Provide(
-	InitBizConfigGrpcClients,
-	InitProviderGrpcClients,
-	InitNotificationGrpcClients,
+var GrpcClientFxOpt = fx.Module(
+	"grpc",
+	fx.Provide(
+		InitBizConfigGrpcClients,
+		InitProviderGrpcClients,
+		InitNotificationGrpcClients,
+	),
 )
 
 type keepaliveConfig struct {

@@ -15,11 +15,14 @@ import (
 	"go.uber.org/fx"
 )
 
-var MiddlewareBuilderOpt = fx.Provide(
-	InitCorsBuilder,
-	fx.Annotate(
-		InitJwtBuilder,
-		fx.ParamTags(``, `name:"access-token-manager"`),
+var MiddlewareBuilderOpt = fx.Module(
+	"middleware",
+	fx.Provide(
+		InitCorsBuilder,
+		fx.Annotate(
+			InitJwtBuilder,
+			fx.ParamTags(``, `name:"access-token-manager"`),
+		),
 	),
 )
 

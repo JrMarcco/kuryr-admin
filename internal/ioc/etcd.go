@@ -14,9 +14,9 @@ import (
 	"go.uber.org/zap"
 )
 
-var EtcdFxOpt = fx.Provide(InitEtcdClient)
+var EtcdFxOpt = fx.Module("etcd", fx.Provide(InitEtcdClient))
 
-func InitEtcdClient(logger *zap.Logger, lc fx.Lifecycle) *clientv3.Client {
+func InitEtcdClient(lc fx.Lifecycle, logger *zap.Logger) *clientv3.Client {
 	type tlsConfig struct {
 		Enabled            bool   `mapstructure:"enabled"`
 		CertFile           string `mapstructure:"cert_file"`

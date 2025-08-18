@@ -9,14 +9,17 @@ import (
 	"go.uber.org/fx"
 )
 
-var JwtManagerOpt = fx.Provide(
-	fx.Annotate(
-		InitAccessTokenManager,
-		fx.ResultTags(`name:"access-token-manager"`),
-	),
-	fx.Annotate(
-		InitRefreshTokenManager,
-		fx.ResultTags(`name:"refresh-token-manager"`),
+var JwtManagerOpt = fx.Module(
+	"jwt",
+	fx.Provide(
+		fx.Annotate(
+			InitAccessTokenManager,
+			fx.ResultTags(`name:"access-token-manager"`),
+		),
+		fx.Annotate(
+			InitRefreshTokenManager,
+			fx.ResultTags(`name:"refresh-token-manager"`),
+		),
 	),
 )
 

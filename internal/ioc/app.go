@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	pkggin "github.com/JrMarcco/kuryr-admin/internal/pkg/gin"
 	"github.com/JrMarcco/kuryr-admin/internal/pkg/gin/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -12,13 +13,19 @@ import (
 	"go.uber.org/zap"
 )
 
-var AppFxOpt = fx.Provide(
-	gin.Default,
-	InitMiddlewares,
-	InitApp,
+var AppFxOpt = fx.Module(
+	"app",
+	fx.Provide(
+		gin.Default,
+		InitMiddlewares,
+	),
+	fx.Invoke(
+		fx.Annotate(
+			InitApp,
+			fx.ParamTags(``, ``, ``, ``, `group:"handler"`),
+		),
+	),
 )
-
-var AppFxInvoke = fx.Invoke(AppLifecycle)
 
 type App struct {
 	svr    *http.Server
@@ -44,7 +51,7 @@ func (app *App) Stop(ctx context.Context) error {
 	return nil
 }
 
-func InitApp(engine *gin.Engine, logger *zap.Logger, mbs []middleware.Builder) *App {
+func InitApp(lc fx.Lifecycle, engine *gin.Engine, logger *zap.Logger, mbs []middleware.Builder, registries []pkggin.RouteRegistry) *App {
 	type config struct {
 		Addr string `mapstructure:"addr"`
 	}
@@ -64,10 +71,25 @@ func InitApp(engine *gin.Engine, logger *zap.Logger, mbs []middleware.Builder) *
 		Handler: engine.Handler(),
 	}
 
-	return &App{
+	app := &App{
 		svr:    svr,
 		logger: logger,
 	}
+
+	for _, registry := range registries {
+		registry.RegisterRoutes(engine)
+	}
+
+	lc.Append(fx.Hook{
+		OnStart: func(ctx context.Context) error {
+			return app.Start()
+		},
+		OnStop: func(ctx context.Context) error {
+			return app.Stop(ctx)
+		},
+	})
+
+	return app
 }
 
 // InitMiddlewares 提供一个用于创建有序中间件切片的函数
@@ -80,15 +102,4 @@ func InitMiddlewares(
 		corsBuilder,
 		jwtBuilder,
 	}
-}
-
-func AppLifecycle(app *App, lc fx.Lifecycle) {
-	lc.Append(fx.Hook{
-		OnStart: func(ctx context.Context) error {
-			return app.Start()
-		},
-		OnStop: func(ctx context.Context) error {
-			return app.Stop(ctx)
-		},
-	})
 }

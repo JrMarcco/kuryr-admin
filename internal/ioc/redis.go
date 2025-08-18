@@ -6,10 +6,13 @@ import (
 	"go.uber.org/fx"
 )
 
-var RedisFxOpt = fx.Provide(
-	fx.Annotate(
-		InitRedis,
-		fx.As(new(redis.Cmdable)),
+var RedisFxOpt = fx.Module(
+	"redis",
+	fx.Provide(
+		fx.Annotate(
+			InitRedis,
+			fx.As(new(redis.Cmdable)),
+		),
 	),
 )
 

@@ -13,6 +13,10 @@ func main() {
 	initViper()
 
 	fx.New(
+		fx.WithLogger(func(logger *zap.Logger) fxevent.Logger {
+			return &fxevent.ZapLogger{Logger: logger}
+		}),
+
 		// 初始化 zap.Logger
 		ioc.LoggerFxOpt,
 		// 初始化 redis.Client
@@ -35,17 +39,12 @@ func main() {
 		ioc.ServiceFxOpt,
 		// 初始化 handler
 		ioc.HandlerFxOpt,
-		// 初始化 ioc.App
-		ioc.AppFxOpt,
-
-		fx.WithLogger(func(logger *zap.Logger) fxevent.Logger {
-			return &fxevent.ZapLogger{Logger: logger}
-		}),
 
 		// 注册 gin 路由，需要在 app 启动前完成
-		ioc.HandlerFxInvoke,
-		// 注册 app lifecycle
-		ioc.AppFxInvoke,
+		// ioc.HandlerFxInvoke,
+
+		// 初始化 ioc.App
+		ioc.AppFxOpt,
 	).Run()
 }
 

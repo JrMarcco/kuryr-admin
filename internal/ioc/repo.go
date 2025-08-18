@@ -6,7 +6,8 @@ import (
 	"go.uber.org/fx"
 )
 
-var RepoFxOpt = fx.Options(
+var RepoFxOpt = fx.Module(
+	"repository",
 	// dao
 	fx.Provide(
 		// user dao

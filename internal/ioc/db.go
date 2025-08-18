@@ -14,9 +14,12 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-var DBFxOpt = fx.Provide(
-	InitDB,
-	snowflake.NewGenerator,
+var DBFxOpt = fx.Module(
+	"db",
+	fx.Provide(
+		InitDB,
+		snowflake.NewGenerator,
+	),
 )
 
 func InitDB(zLogger *zap.Logger) *gorm.DB {

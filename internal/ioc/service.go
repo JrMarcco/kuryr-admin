@@ -13,7 +13,8 @@ import (
 	"gorm.io/gorm"
 )
 
-var ServiceFxOpt = fx.Options(
+var ServiceFxOpt = fx.Module(
+	"service",
 	fx.Provide(
 		// user service
 		fx.Annotate(
