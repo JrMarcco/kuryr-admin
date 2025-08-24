@@ -8,8 +8,8 @@ import (
 	"github.com/JrMarcco/easy-grpc/client"
 	"github.com/JrMarcco/easy-kit/slice"
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
-	commonv1 "github.com/JrMarcco/kuryr-api/api/common/v1"
-	providerv1 "github.com/JrMarcco/kuryr-api/api/provider/v1"
+	commonv1 "github.com/JrMarcco/kuryr-api/api/go/common/v1"
+	providerv1 "github.com/JrMarcco/kuryr-api/api/go/provider/v1"
 )
 
 type ProviderService interface {
@@ -32,14 +32,11 @@ func (s *DefaultProviderService) Save(ctx context.Context, provider domain.Provi
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	resp, err := grpcClient.Save(ctx, &providerv1.SaveRequest{Provider: s.domainToPb(provider)})
+	_, err = grpcClient.Save(ctx, &providerv1.SaveRequest{Provider: s.domainToPb(provider)})
 	cancel()
 
 	if err != nil {
 		return fmt.Errorf("[kuryr-admin] failed to save provider: %w", err)
-	}
-	if !resp.Success {
-		return fmt.Errorf("[kuryr-admin] failed to save provider: [ %s ]", resp.ErrMsg)
 	}
 	return nil
 }

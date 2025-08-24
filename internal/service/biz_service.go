@@ -8,12 +8,9 @@ import (
 	"github.com/JrMarcco/easy-grpc/client"
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
 	pkggorm "github.com/JrMarcco/kuryr-admin/internal/pkg/gorm"
-	"github.com/JrMarcco/kuryr-admin/internal/pkg/secret"
 	"github.com/JrMarcco/kuryr-admin/internal/repository"
 	"github.com/JrMarcco/kuryr-admin/internal/search"
-	configv1 "github.com/JrMarcco/kuryr-api/api/config/v1"
-	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
+	businessv1 "github.com/JrMarcco/kuryr-api/api/go/business/v1"
 )
 
 type BizService interface {
@@ -21,119 +18,63 @@ type BizService interface {
 	Delete(ctx context.Context, id uint64) error
 
 	Search(ctx context.Context, criteria search.BizSearchCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[domain.BizInfo], error)
-	FindById(ctx context.Context, id uint64) (domain.BizInfo, error)
 }
 
 var _ BizService = (*DefaultBizService)(nil)
 
 type DefaultBizService struct {
 	grpcServerName string
-	grpcClients    *client.Manager[configv1.BizConfigServiceClient]
+	grpcClients    *client.Manager[businessv1.BusinessServiceClient]
 
-	db *gorm.DB // db 数据库连接，用于开启事务
-
-	repo     repository.BizRepo
 	userRepo repository.UserRepo
-
-	generator secret.Generator // biz secret 生成器
 }
 
 func (s *DefaultBizService) Save(ctx context.Context, bi domain.BizInfo) (domain.BizInfo, error) {
-	bizSecret, err := s.generator.Generate(32)
-	if err != nil {
-		return domain.BizInfo{}, err
-	}
-	bi.BizSecret = bizSecret
-
-	// 开启事务
-	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var innerErr error
-		var res domain.BizInfo
-		res, innerErr = s.repo.SaveWithTx(ctx, tx, bi)
-		if innerErr != nil {
-			return innerErr
-		}
-		if bi.Id == 0 {
-			// 当前为新建业务方，创建操作员
-			// TODO: 这里要改成使用默认密码生成策略，然后创建成功后发送邮件通知，这里暂时写死
-			var defaultPasswd []byte
-			defaultPasswd, innerErr = bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
-			if innerErr != nil {
-				return innerErr
-			}
-			operator := domain.SysUser{
-				Email:     bi.ContactEmail,
-				Password:  string(defaultPasswd),
-				RealName:  bi.Contact,
-				UserType:  domain.UserTypeOperator,
-				BizId:     res.Id,
-				CreatedAt: res.CreatedAt,
-				UpdatedAt: res.UpdatedAt,
-			}
-
-			_, innerErr = s.userRepo.SaveWithTx(ctx, tx, operator)
-			if innerErr != nil {
-				return innerErr
-			}
-		}
-		bi.Id = res.Id
-		return nil
-	})
-
-	if err != nil {
-		return domain.BizInfo{}, err
-	}
-	return bi, err
-}
-
-func (s *DefaultBizService) Delete(ctx context.Context, id uint64) error {
-	// 删除 biz config
 	grpcClient, err := s.grpcClients.Get(s.grpcServerName)
 	if err != nil {
-		return fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
+		return domain.BizInfo{}, fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	resp, err := grpcClient.Delete(ctx, &configv1.DeleteRequest{Id: id})
+	_, err = grpcClient.Save(ctx, &businessv1.SaveRequest{BusinessInfo: s.domainToPb(bi)})
 	cancel()
 
 	if err != nil {
-		return fmt.Errorf("[kuryr-admin] failed to delete biz config: %w", err)
-	}
-	if !resp.Success {
-		return fmt.Errorf("[kuryr-admin] failed to delete biz config: [ %s ]", resp.ErrMsg)
+		return domain.BizInfo{}, fmt.Errorf("[kuryr-admin] failed to save biz info: %w", err)
 	}
 
-	// 开启事务，删除业务以及对应操作员信息
-	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if innerErr := s.userRepo.DeleteByBizIdWithTx(ctx, tx, id); innerErr != nil {
-			return innerErr
-		}
-		if innerErr := s.repo.DeleteWithTx(ctx, tx, id); innerErr != nil {
-			return innerErr
-		}
-		return nil
-	})
+}
+
+func (s *DefaultBizService) Delete(ctx context.Context, id uint64) error {
+	// TODO: implement me
+	panic("implement me")
 }
 
 func (s *DefaultBizService) Search(ctx context.Context, criteria search.BizSearchCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[domain.BizInfo], error) {
-	return s.repo.Search(ctx, criteria, param)
+	// TODO: implement me
+	panic("implement me")
 }
 
-func (s *DefaultBizService) FindById(ctx context.Context, id uint64) (domain.BizInfo, error) {
-	return s.repo.FindById(ctx, id)
+func (s *DefaultBizService) domainToPb(bi domain.BizInfo) *businessv1.BusinessInfo {
+	return &businessv1.BusinessInfo{
+		Id:           bi.Id,
+		BizName:      bi.BizName,
+		BizType:      string(bi.BizType),
+		BizKey:       bi.BizKey,
+		BizSecret:    bi.BizSecret,
+		Contact:      bi.Contact,
+		ContactEmail: bi.ContactEmail,
+		CreatorId:    bi.CreatorId,
+	}
 }
 
 func NewDefaultBizService(
-	grpcServerName string, grpcClients *client.Manager[configv1.BizConfigServiceClient],
-	db *gorm.DB, bizRepo repository.BizRepo, userRepo repository.UserRepo, generator secret.Generator,
+	grpcServerName string, grpcClients *client.Manager[businessv1.BusinessServiceClient],
+	userRepo repository.UserRepo,
 ) *DefaultBizService {
 	return &DefaultBizService{
 		grpcServerName: grpcServerName,
-		db:             db,
-		repo:           bizRepo,
 		userRepo:       userRepo,
-		generator:      generator,
 		grpcClients:    grpcClients,
 	}
 }

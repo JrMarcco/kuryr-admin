@@ -91,23 +91,25 @@ func (h *BizHandler) Search(ctx *gin.Context, req searchBizReq, au pkggin.AuthUs
 	var res *pkggorm.PaginationResult[domain.BizInfo]
 	var err error
 
-	switch au.UserType {
-	case domain.UserTypeAdmin:
-		criteria := search.BizSearchCriteria{
-			BizName: req.BizName,
-		}
-		res, err = h.svc.Search(ctx, criteria, req.PaginationParam)
-	case domain.UserTypeOperator:
-		var bizInfo domain.BizInfo
-		bizInfo, err = h.svc.FindById(ctx, au.Bid)
-		res = pkggorm.NewPaginationResult([]domain.BizInfo{bizInfo}, 1)
-	default:
-		return pkggin.R{}, errs.ErrUnknownUser
+	criteria := search.BizSearchCriteria{
+		BizName: req.BizName,
 	}
 
+	switch au.UserType {
+	case domain.UserTypeAdmin:
+		// do nothing
+	case domain.UserTypeOperator:
+		criteria.BizId = au.Bid
+		break
+	default:
+		return pkggin.R{}, errs.ErrUnknownUserType
+	}
+
+	res, err = h.svc.Search(ctx, criteria, req.PaginationParam)
 	if err != nil {
 		return pkggin.R{}, err
 	}
+
 	return pkggin.R{
 		Code: http.StatusOK,
 		Data: res,

@@ -46,7 +46,7 @@ func (d *DefaultUserDao) SaveWithTx(ctx context.Context, tx *gorm.DB, u SysUser)
 }
 
 func (d *DefaultUserDao) DeleteByBizIdWithTx(ctx context.Context, tx *gorm.DB, id uint64) error {
-	return tx.WithContext(ctx).Model(&BizInfo{}).
+	return tx.WithContext(ctx).Model(&SysUser{}).
 		Where("biz_id = ?", id).
 		Delete(&SysUser{}).Error
 }

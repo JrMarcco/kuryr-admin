@@ -9,9 +9,8 @@ import (
 	"github.com/JrMarcco/easy-grpc/client"
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
 	"github.com/JrMarcco/kuryr-admin/internal/errs"
-	"github.com/JrMarcco/kuryr-admin/internal/repository"
-	commonv1 "github.com/JrMarcco/kuryr-api/api/common/v1"
-	configv1 "github.com/JrMarcco/kuryr-api/api/config/v1"
+	commonv1 "github.com/JrMarcco/kuryr-api/api/go/common/v1"
+	configv1 "github.com/JrMarcco/kuryr-api/api/go/config/v1"
 	"gorm.io/gorm"
 )
 
@@ -26,8 +25,6 @@ var _ BizConfigService = (*DefaultBizConfigService)(nil)
 type DefaultBizConfigService struct {
 	grpcServerName string
 	grpcClients    *client.Manager[configv1.BizConfigServiceClient]
-
-	bizRepo repository.BizRepo
 }
 
 func (s *DefaultBizConfigService) Save(ctx context.Context, bizConfig domain.BizConfig) error {
@@ -237,11 +234,9 @@ func (s *DefaultBizConfigService) convertRetry(pbRetry *configv1.RetryPolicyConf
 
 func NewDefaultBizConfigService(
 	grpcServerName string, grpcClients *client.Manager[configv1.BizConfigServiceClient],
-	bizRepo repository.BizRepo,
 ) *DefaultBizConfigService {
 	return &DefaultBizConfigService{
 		grpcServerName: grpcServerName,
 		grpcClients:    grpcClients,
-		bizRepo:        bizRepo,
 	}
 }

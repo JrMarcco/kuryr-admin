@@ -15,11 +15,6 @@ var RepoFxOpt = fx.Module(
 			dao.NewUserDAO,
 			fx.As(new(dao.UserDao)),
 		),
-		// biz dao
-		fx.Annotate(
-			dao.NewBizDAO,
-			fx.As(new(dao.BizDao)),
-		),
 	),
 	// cache
 
@@ -29,11 +24,6 @@ var RepoFxOpt = fx.Module(
 		fx.Annotate(
 			repository.NewUserRepo,
 			fx.As(new(repository.UserRepo)),
-		),
-		// biz repo
-		fx.Annotate(
-			repository.NewBizRepo,
-			fx.As(new(repository.BizRepo)),
 		),
 	),
 )
