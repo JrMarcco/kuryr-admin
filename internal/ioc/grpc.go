@@ -7,6 +7,7 @@ import (
 	"github.com/JrMarcco/easy-grpc/client/br"
 	"github.com/JrMarcco/easy-grpc/client/rr"
 	"github.com/JrMarcco/easy-grpc/registry"
+	businessv1 "github.com/JrMarcco/kuryr-api/api/go/business/v1"
 	configv1 "github.com/JrMarcco/kuryr-api/api/go/config/v1"
 	notificationv1 "github.com/JrMarcco/kuryr-api/api/go/notification/v1"
 	providerv1 "github.com/JrMarcco/kuryr-api/api/go/provider/v1"
@@ -21,6 +22,7 @@ import (
 var GrpcClientFxOpt = fx.Module(
 	"grpc",
 	fx.Provide(
+		InitBizInfoGrpcClients,
 		InitBizConfigGrpcClients,
 		InitProviderGrpcClients,
 		InitNotificationGrpcClients,
@@ -45,6 +47,31 @@ func loadLoadBalanceConfig() *lbConfig {
 		panic(err)
 	}
 	return cfg
+}
+
+// InitBizInfoGrpcClients 初始化 biz info grpc client 管理器
+func InitBizInfoGrpcClients(r registry.Registry) *client.Manager[businessv1.BusinessServiceClient] {
+	cfg := loadLoadBalanceConfig()
+	bb := base.NewBalancerBuilder(
+		cfg.Name,
+		br.NewRwWeightBalancerBuilder(),
+		base.Config{HealthCheck: true},
+	)
+
+	// 注册负载均衡
+	balancer.Register(bb)
+
+	return client.NewManagerBuilder(
+		rr.NewResolverBuilder(r, time.Duration(cfg.Timeout)*time.Millisecond),
+		bb,
+		func(conn *grpc.ClientConn) businessv1.BusinessServiceClient {
+			return businessv1.NewBusinessServiceClient(conn)
+		},
+	).KeepAlive(keepalive.ClientParameters{
+		Time:                time.Duration(cfg.KeepAlive.Time) * time.Millisecond,
+		Timeout:             time.Duration(cfg.KeepAlive.Timeout) * time.Millisecond,
+		PermitWithoutStream: cfg.KeepAlive.PermitWithoutStream,
+	}).Insecure().Build()
 }
 
 // InitBizConfigGrpcClients 初始化 biz config grpc client 管理器

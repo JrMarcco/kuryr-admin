@@ -20,7 +20,10 @@ func W(bizFunc func(*gin.Context) (R, error)) gin.HandlerFunc {
 		}
 		if err != nil {
 			slog.Error("failed to handle request", slog.Any("err", err))
-			ctx.PureJSON(http.StatusInternalServerError, r)
+			ctx.PureJSON(http.StatusInternalServerError, gin.H{
+				"code": http.StatusInternalServerError,
+				"msg":  err.Error(),
+			})
 			return
 		}
 		ctx.PureJSON(r.Code, r)
@@ -44,7 +47,10 @@ func B[Req any](bizFunc func(*gin.Context, Req) (R, error)) gin.HandlerFunc {
 		}
 		if err != nil {
 			slog.Error("failed to handle request", slog.Any("err", err))
-			ctx.PureJSON(http.StatusInternalServerError, r)
+			ctx.PureJSON(http.StatusInternalServerError, gin.H{
+				"code": http.StatusInternalServerError,
+				"msg":  err.Error(),
+			})
 			return
 		}
 		ctx.PureJSON(r.Code, r)
@@ -68,7 +74,10 @@ func Q[Req any](bizFunc func(*gin.Context, Req) (R, error)) gin.HandlerFunc {
 		}
 		if err != nil {
 			slog.Error("failed to handle request", slog.Any("err", err))
-			ctx.PureJSON(http.StatusInternalServerError, r)
+			ctx.PureJSON(http.StatusInternalServerError, gin.H{
+				"code": http.StatusInternalServerError,
+				"msg":  err.Error(),
+			})
 			return
 		}
 		ctx.PureJSON(r.Code, r)
@@ -92,7 +101,10 @@ func P[Req any](bizFunc func(*gin.Context, Req) (R, error)) gin.HandlerFunc {
 		}
 		if err != nil {
 			slog.Error("failed to handle request", slog.Any("err", err))
-			ctx.PureJSON(http.StatusInternalServerError, r)
+			ctx.PureJSON(http.StatusInternalServerError, gin.H{
+				"code": http.StatusInternalServerError,
+				"msg":  err.Error(),
+			})
 			return
 		}
 		ctx.PureJSON(r.Code, r)
@@ -116,7 +128,7 @@ func WU(bizFunc func(*gin.Context, AuthUser) (R, error)) gin.HandlerFunc {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		
+
 		r, err := bizFunc(ctx, au)
 		if errors.Is(err, errs.ErrUnauthorized) {
 			slog.Debug("unauthorized", slog.Any("err", err))
@@ -125,7 +137,10 @@ func WU(bizFunc func(*gin.Context, AuthUser) (R, error)) gin.HandlerFunc {
 		}
 		if err != nil {
 			slog.Error("failed to handle request", slog.Any("err", err))
-			ctx.PureJSON(http.StatusInternalServerError, r)
+			ctx.PureJSON(http.StatusInternalServerError, gin.H{
+				"code": http.StatusInternalServerError,
+				"msg":  err.Error(),
+			})
 			return
 		}
 		ctx.PureJSON(r.Code, r)
@@ -158,7 +173,10 @@ func BU[Req any](bizFunc func(*gin.Context, Req, AuthUser) (R, error)) gin.Handl
 		r, err := bizFunc(ctx, req, au)
 		if err != nil {
 			slog.Error("failed to handle request", slog.Any("err", err))
-			ctx.PureJSON(http.StatusInternalServerError, r)
+			ctx.PureJSON(http.StatusInternalServerError, gin.H{
+				"code": http.StatusInternalServerError,
+				"msg":  err.Error(),
+			})
 			return
 		}
 		ctx.PureJSON(r.Code, r)
@@ -191,7 +209,10 @@ func QU[Req any](bizFunc func(*gin.Context, Req, AuthUser) (R, error)) gin.Handl
 		r, err := bizFunc(ctx, req, au)
 		if err != nil {
 			slog.Error("failed to handle request", slog.Any("err", err))
-			ctx.PureJSON(http.StatusInternalServerError, r)
+			ctx.PureJSON(http.StatusInternalServerError, gin.H{
+				"code": http.StatusInternalServerError,
+				"msg":  err.Error(),
+			})
 			return
 		}
 		ctx.PureJSON(r.Code, r)
@@ -224,7 +245,10 @@ func PU[Req any](bizFunc func(*gin.Context, Req, AuthUser) (R, error)) gin.Handl
 		r, err := bizFunc(ctx, req, au)
 		if err != nil {
 			slog.Error("failed to handle request", slog.Any("err", err))
-			ctx.PureJSON(http.StatusInternalServerError, r)
+			ctx.PureJSON(http.StatusInternalServerError, gin.H{
+				"code": http.StatusInternalServerError,
+				"msg":  err.Error(),
+			})
 			return
 		}
 		ctx.PureJSON(r.Code, r)

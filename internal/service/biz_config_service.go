@@ -2,21 +2,16 @@ package service
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"time"
 
 	"github.com/JrMarcco/easy-grpc/client"
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
-	"github.com/JrMarcco/kuryr-admin/internal/errs"
 	commonv1 "github.com/JrMarcco/kuryr-api/api/go/common/v1"
 	configv1 "github.com/JrMarcco/kuryr-api/api/go/config/v1"
-	"gorm.io/gorm"
 )
 
 type BizConfigService interface {
 	Save(ctx context.Context, bizConfig domain.BizConfig) error
-	Delete(ctx context.Context, id uint64) error
 	FindByBizId(ctx context.Context, id uint64) (domain.BizConfig, error)
 }
 
@@ -28,69 +23,50 @@ type DefaultBizConfigService struct {
 }
 
 func (s *DefaultBizConfigService) Save(ctx context.Context, bizConfig domain.BizConfig) error {
+	// TODO: implement me
+	panic("implement me")
+	// bi, err := s.bizRepo.FindById(ctx, bizConfig.Id)
+	// if err != nil {
+	// 	if errors.Is(err, gorm.ErrRecordNotFound) {
+	// 		return fmt.Errorf("[kuryr-admin] failed to find biz info [ %d ]", bizConfig.Id)
+	// 	}
+	// 	return fmt.Errorf("[kuryr-admin] failed to find biz info: %w", err)
+	// }
 
-	bi, err := s.bizRepo.FindById(ctx, bizConfig.Id)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("[kuryr-admin] failed to find biz info [ %d ]", bizConfig.Id)
-		}
-		return fmt.Errorf("[kuryr-admin] failed to find biz info: %w", err)
-	}
+	// grpcClient, err := s.grpcClients.Get(s.grpcServerName)
+	// if err != nil {
+	// 	return fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
+	// }
 
-	grpcClient, err := s.grpcClients.Get(s.grpcServerName)
-	if err != nil {
-		return fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
-	}
+	// // 构建 grpc 请求
+	// pb := &configv1.BizConfig{
+	// 	BizId:     bi.Id,
+	// 	OwnerType: string(bizConfig.OwnerType),
+	// 	RateLimit: bizConfig.RateLimit,
+	// }
 
-	// 构建 grpc 请求
-	pb := &configv1.BizConfig{
-		BizId:     bi.Id,
-		OwnerType: string(bizConfig.OwnerType),
-		RateLimit: bizConfig.RateLimit,
-	}
+	// if bizConfig.ChannelConfig != nil {
+	// 	pb.ChannelConfig = s.convertToPbChannel(bizConfig.ChannelConfig)
+	// }
+	// if bizConfig.QuotaConfig != nil {
+	// 	pb.QuotaConfig = s.convertToQuota(bizConfig.QuotaConfig)
+	// }
 
-	if bizConfig.ChannelConfig != nil {
-		pb.ChannelConfig = s.convertToPbChannel(bizConfig.ChannelConfig)
-	}
-	if bizConfig.QuotaConfig != nil {
-		pb.QuotaConfig = s.convertToQuota(bizConfig.QuotaConfig)
-	}
+	// if bizConfig.CallbackConfig != nil {
+	// 	pb.CallbackConfig = s.convertToPbCallback(bizConfig.CallbackConfig)
+	// }
 
-	if bizConfig.CallbackConfig != nil {
-		pb.CallbackConfig = s.convertToPbCallback(bizConfig.CallbackConfig)
-	}
+	// ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	// resp, err := grpcClient.Save(ctx, &configv1.SaveRequest{Config: pb})
+	// cancel()
 
-	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	resp, err := grpcClient.Save(ctx, &configv1.SaveRequest{Config: pb})
-	cancel()
-
-	if err != nil {
-		return fmt.Errorf("[kuryr-admin] failed to save biz config: %w", err)
-	}
-	if !resp.Success {
-		return fmt.Errorf("[kuryr-admin] failed to save biz config: [ %s ]", resp.ErrMsg)
-	}
-	return nil
-}
-
-func (s *DefaultBizConfigService) Delete(ctx context.Context, id uint64) error {
-	// 删除 biz config
-	grpcClient, err := s.grpcClients.Get(s.grpcServerName)
-	if err != nil {
-		return fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	resp, err := grpcClient.Delete(ctx, &configv1.DeleteRequest{Id: id})
-	cancel()
-
-	if err != nil {
-		return fmt.Errorf("[kuryr-admin] failed to delete biz config: %w", err)
-	}
-	if !resp.Success {
-		return fmt.Errorf("[kuryr-admin] failed to delete biz config: [ %s ]", resp.ErrMsg)
-	}
-	return nil
+	// if err != nil {
+	// 	return fmt.Errorf("[kuryr-admin] failed to save biz config: %w", err)
+	// }
+	// if !resp.Success {
+	// 	return fmt.Errorf("[kuryr-admin] failed to save biz config: [ %s ]", resp.ErrMsg)
+	// }
+	// return nil
 }
 
 // convertToPbChannel 渠道配置 proto buf
@@ -146,22 +122,24 @@ func (s *DefaultBizConfigService) convertToPbRetry(config *domain.RetryConfig) *
 }
 
 func (s *DefaultBizConfigService) FindByBizId(ctx context.Context, id uint64) (domain.BizConfig, error) {
-	grpcClient, err := s.grpcClients.Get(s.grpcServerName)
-	if err != nil {
-		return domain.BizConfig{}, fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
-	}
+	// TODO: implement me
+	panic("implement me")
+	// grpcClient, err := s.grpcClients.Get(s.grpcServerName)
+	// if err != nil {
+	// 	return domain.BizConfig{}, fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
+	// }
 
-	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	resp, err := grpcClient.FindById(ctx, &configv1.FindByIdRequest{Id: id})
-	cancel()
+	// ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	// resp, err := grpcClient.FindById(ctx, &configv1.FindByIdRequest{Id: id})
+	// cancel()
 
-	if err != nil {
-		return domain.BizConfig{}, fmt.Errorf("[kuryr-admin] failed to get biz config: %w", err)
-	}
-	if resp.ErrCode == commonv1.ErrCode_BIZ_CONFIG_NOT_FOUND {
-		return domain.BizConfig{}, errs.ErrRecordNotFound
-	}
-	return s.pbToDomain(resp.Config), nil
+	// if err != nil {
+	// 	return domain.BizConfig{}, fmt.Errorf("[kuryr-admin] failed to get biz config: %w", err)
+	// }
+	// if resp.ErrCode == commonv1.ErrCode_BIZ_CONFIG_NOT_FOUND {
+	// 	return domain.BizConfig{}, errs.ErrRecordNotFound
+	// }
+	// return s.pbToDomain(resp.Config), nil
 }
 
 func (s *DefaultBizConfigService) pbToDomain(pb *configv1.BizConfig) domain.BizConfig {

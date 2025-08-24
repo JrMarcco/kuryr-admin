@@ -4,10 +4,6 @@ profile:
 app:
   addr: "localhost:8080"
 
-grpc_servers:
-  biz_config:
-    name: "kuryr"
-
 db:
   log_level: "info"
   slow_threshold: 200 # 慢查询阈值，单位：毫秒
@@ -67,6 +63,8 @@ registry:
   lease_ttl: 30 # 单位：秒，这里和 etcd api 保持一直所以是秒单位
 
 grpc:
+  server:
+    name: "kuryr"
   client:
     load_balance:
       name: "read_write_weight"           # 负载均衡 resolver 名称

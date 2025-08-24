@@ -26,8 +26,35 @@ Content-Type: application/json
 }
 
 
-#### Search Biz
-GET http://localhost:8080/api/v1/biz/search?offset=0&limit=10
+### Save Biz Info
+POST http://localhost:8080/api/v1/biz_info/save
+X-ACCESS-TOKEN: {{access_token}}
+Content-Type: application/json
+
+{
+    "biz_type": "individual",
+    "biz_key": "test_business_info_1",
+    "biz_name": "test business info 1",
+    "contact": "test contact 1",
+    "contact_email": "test_contact_email_1@example.com"
+}
+
+
+### Update Biz Info
+PUT http://localhost:8080/api/v1/biz_info/update
+X-ACCESS-TOKEN: {{access_token}}
+Content-Type: application/json
+
+{
+    "id": 1,
+    "biz_name": "test business info 1",
+    "contact": "test contact 1",
+    "contact_email": "test_contact_email_1@example.com"
+}
+
+
+#### Search Biz Info
+GET http://localhost:8080/api/v1/biz_info/search?offset=0&limit=10
 X-ACCESS-TOKEN: {{access_token}}
 
 

@@ -2,7 +2,6 @@ package web
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
 	"github.com/JrMarcco/kuryr-admin/internal/errs"
@@ -13,17 +12,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var _ pkggin.RouteRegistry = (*BizHandler)(nil)
+var _ pkggin.RouteRegistry = (*BizInfoHandler)(nil)
 
-// BizHandler 业务方信息 web handler。
-type BizHandler struct {
+// BizInfoHandler 业务方信息 web handler。
+type BizInfoHandler struct {
 	svc service.BizService
 }
 
-func (h *BizHandler) RegisterRoutes(engine *gin.Engine) {
-	v1 := engine.Group("/api/v1/biz")
+func (h *BizInfoHandler) RegisterRoutes(engine *gin.Engine) {
+	v1 := engine.Group("/api/v1/biz_info")
 
 	v1.Handle(http.MethodPost, "/save", pkggin.BU(h.Save))
+	v1.Handle(http.MethodPut, "/update", pkggin.BU(h.Update))
 	v1.Handle(http.MethodDelete, "/delete", pkggin.QU(h.Delete))
 	v1.Handle(http.MethodGet, "/search", pkggin.QU(h.Search))
 }
@@ -37,7 +37,7 @@ type createBizReq struct {
 }
 
 // Save 新建业务方信息。
-func (h *BizHandler) Save(ctx *gin.Context, req createBizReq, au pkggin.AuthUser) (pkggin.R, error) {
+func (h *BizInfoHandler) Save(ctx *gin.Context, req createBizReq, au pkggin.AuthUser) (pkggin.R, error) {
 	if au.UserType != domain.UserTypeAdmin {
 		return pkggin.R{
 			Code: http.StatusForbidden,
@@ -59,7 +59,34 @@ func (h *BizHandler) Save(ctx *gin.Context, req createBizReq, au pkggin.AuthUser
 	}
 	return pkggin.R{
 		Code: http.StatusOK,
-		Data: strconv.FormatUint(bi.Id, 10),
+		Data: bi,
+	}, nil
+}
+
+type updateBizReq struct {
+	Id      uint64 `json:"id"`
+	BizName string `json:"biz_name"`
+}
+
+func (h *BizInfoHandler) Update(ctx *gin.Context, req updateBizReq, au pkggin.AuthUser) (pkggin.R, error) {
+	if au.UserType != domain.UserTypeAdmin {
+		return pkggin.R{
+			Code: http.StatusForbidden,
+			Msg:  "[kuryr-admin] only admin can update biz",
+		}, nil
+	}
+
+	bi := domain.BizInfo{
+		Id:      req.Id,
+		BizName: req.BizName,
+	}
+	bi, err := h.svc.Update(ctx, bi)
+	if err != nil {
+		return pkggin.R{}, err
+	}
+	return pkggin.R{
+		Code: http.StatusOK,
+		Data: bi,
 	}, nil
 }
 
@@ -67,7 +94,7 @@ type deleteBizReq struct {
 	BizId uint64 `json:"biz_id" form:"biz_id"`
 }
 
-func (h *BizHandler) Delete(ctx *gin.Context, req deleteBizReq, au pkggin.AuthUser) (pkggin.R, error) {
+func (h *BizInfoHandler) Delete(ctx *gin.Context, req deleteBizReq, au pkggin.AuthUser) (pkggin.R, error) {
 	if au.UserType != domain.UserTypeAdmin {
 		return pkggin.R{
 			Code: http.StatusForbidden,
@@ -87,7 +114,7 @@ type searchBizReq struct {
 }
 
 // Search 分页查询业务方信息
-func (h *BizHandler) Search(ctx *gin.Context, req searchBizReq, au pkggin.AuthUser) (pkggin.R, error) {
+func (h *BizInfoHandler) Search(ctx *gin.Context, req searchBizReq, au pkggin.AuthUser) (pkggin.R, error) {
 	var res *pkggorm.PaginationResult[domain.BizInfo]
 	var err error
 
@@ -100,7 +127,6 @@ func (h *BizHandler) Search(ctx *gin.Context, req searchBizReq, au pkggin.AuthUs
 		// do nothing
 	case domain.UserTypeOperator:
 		criteria.BizId = au.Bid
-		break
 	default:
 		return pkggin.R{}, errs.ErrUnknownUserType
 	}
@@ -116,6 +142,6 @@ func (h *BizHandler) Search(ctx *gin.Context, req searchBizReq, au pkggin.AuthUs
 	}, nil
 }
 
-func NewBizHandler(svc service.BizService) *BizHandler {
-	return &BizHandler{svc: svc}
+func NewBizHandler(svc service.BizService) *BizInfoHandler {
+	return &BizInfoHandler{svc: svc}
 }

@@ -1,0 +1,169 @@
+package service
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/JrMarcco/easy-grpc/client"
+	"github.com/JrMarcco/easy-kit/slice"
+	"github.com/JrMarcco/kuryr-admin/internal/domain"
+	pkggorm "github.com/JrMarcco/kuryr-admin/internal/pkg/gorm"
+	"github.com/JrMarcco/kuryr-admin/internal/repository"
+	"github.com/JrMarcco/kuryr-admin/internal/search"
+	businessv1 "github.com/JrMarcco/kuryr-api/api/go/business/v1"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
+)
+
+type BizService interface {
+	Save(ctx context.Context, bi domain.BizInfo) (domain.BizInfo, error)
+	Update(ctx context.Context, bi domain.BizInfo) (domain.BizInfo, error)
+	Delete(ctx context.Context, id uint64) error
+
+	Search(ctx context.Context, criteria search.BizSearchCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[domain.BizInfo], error)
+}
+
+var _ BizService = (*DefaultBizService)(nil)
+
+type DefaultBizService struct {
+	grpcServerName string
+	grpcClients    *client.Manager[businessv1.BusinessServiceClient]
+
+	userRepo repository.UserRepo
+}
+
+func (s *DefaultBizService) Save(ctx context.Context, bi domain.BizInfo) (domain.BizInfo, error) {
+	grpcClient, err := s.grpcClients.Get(s.grpcServerName)
+	if err != nil {
+		return domain.BizInfo{}, fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	resp, err := grpcClient.Save(ctx, &businessv1.SaveRequest{BusinessInfo: s.domainToPb(bi)})
+	cancel()
+
+	if err != nil {
+		return domain.BizInfo{}, fmt.Errorf("[kuryr-admin] failed to save biz info: %w", err)
+	}
+
+	// TODO: 新增操作员信息
+
+	return s.pbToDomain(resp.BusinessInfo), nil
+}
+
+func (s *DefaultBizService) Update(ctx context.Context, bi domain.BizInfo) (domain.BizInfo, error) {
+	grpcClient, err := s.grpcClients.Get(s.grpcServerName)
+	if err != nil {
+		return domain.BizInfo{}, fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
+	}
+
+	fieldMask := &fieldmaskpb.FieldMask{
+		Paths: []string{
+			businessv1.FieldBizName,
+			businessv1.FieldContact,
+			businessv1.FieldContactEmail,
+		},
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	resp, err := grpcClient.Update(ctx, &businessv1.UpdateRequest{
+		FieldMask:    fieldMask,
+		BusinessInfo: s.domainToPb(bi),
+	})
+	cancel()
+
+	if err != nil {
+		return domain.BizInfo{}, fmt.Errorf("[kuryr-admin] failed to update biz info: %w", err)
+	}
+
+	// TODO: 修改操作员信息
+
+	return s.pbToDomain(resp.BusinessInfo), nil
+}
+
+func (s *DefaultBizService) Delete(ctx context.Context, id uint64) error {
+	grpcClient, err := s.grpcClients.Get(s.grpcServerName)
+	if err != nil {
+		return fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	_, err = grpcClient.Delete(ctx, &businessv1.DeleteRequest{BizId: id})
+	cancel()
+
+	if err != nil {
+		return fmt.Errorf("[kuryr-admin] failed to delete biz info: %w", err)
+	}
+	return nil
+}
+
+func (s *DefaultBizService) Search(ctx context.Context, criteria search.BizSearchCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[domain.BizInfo], error) {
+	grpcClient, err := s.grpcClients.Get(s.grpcServerName)
+	if err != nil {
+		return nil, fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	resp, err := grpcClient.Search(ctx, &businessv1.SearchRequest{
+		FieldMask: &fieldmaskpb.FieldMask{
+			Paths: []string{
+				businessv1.FieldBizKey,
+				businessv1.FieldBizName,
+				businessv1.FieldBizType,
+			},
+		},
+		Offset:  int32(param.Offset),
+		Limit:   int32(param.Limit),
+		BizName: criteria.BizName,
+	})
+	cancel()
+
+	if err != nil {
+		return nil, fmt.Errorf("[kuryr-admin] failed to search biz info: %w", err)
+	}
+
+	return &pkggorm.PaginationResult[domain.BizInfo]{
+		Total: resp.Total,
+		Records: slice.Map(resp.Records, func(_ int, src *businessv1.BusinessInfo) domain.BizInfo {
+			return s.pbToDomain(src)
+		}),
+	}, nil
+}
+
+func (s *DefaultBizService) domainToPb(bi domain.BizInfo) *businessv1.BusinessInfo {
+	return &businessv1.BusinessInfo{
+		Id:           bi.Id,
+		BizName:      bi.BizName,
+		BizType:      string(bi.BizType),
+		BizKey:       bi.BizKey,
+		BizSecret:    bi.BizSecret,
+		Contact:      bi.Contact,
+		ContactEmail: bi.ContactEmail,
+		CreatorId:    bi.CreatorId,
+	}
+}
+
+func (s *DefaultBizService) pbToDomain(pb *businessv1.BusinessInfo) domain.BizInfo {
+	return domain.BizInfo{
+		Id:           pb.Id,
+		BizType:      domain.BizType(pb.BizType),
+		BizKey:       pb.BizKey,
+		BizSecret:    pb.BizSecret,
+		BizName:      pb.BizName,
+		Contact:      pb.Contact,
+		ContactEmail: pb.ContactEmail,
+		CreatorId:    pb.CreatorId,
+		UpdatedAt:    pb.UpdatedAt,
+		CreatedAt:    pb.CreatedAt,
+	}
+}
+func NewDefaultBizService(
+	grpcServerName string, grpcClients *client.Manager[businessv1.BusinessServiceClient],
+	userRepo repository.UserRepo,
+) *DefaultBizService {
+	return &DefaultBizService{
+		grpcServerName: grpcServerName,
+		grpcClients:    grpcClients,
+		userRepo:       userRepo,
+	}
+}

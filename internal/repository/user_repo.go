@@ -5,12 +5,11 @@ import (
 
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
 	"github.com/JrMarcco/kuryr-admin/internal/repository/dao"
-	"gorm.io/gorm"
 )
 
 type UserRepo interface {
-	SaveWithTx(ctx context.Context, tx *gorm.DB, u domain.SysUser) (domain.SysUser, error)
-	DeleteByBizIdWithTx(ctx context.Context, tx *gorm.DB, bizId uint64) error
+	Save(ctx context.Context, u domain.SysUser) (domain.SysUser, error)
+	DeleteByBizId(ctx context.Context, bizId uint64) error
 
 	FindByEmail(ctx context.Context, email string) (domain.SysUser, error)
 }
@@ -21,8 +20,8 @@ type DefaultUserRepo struct {
 	dao dao.UserDao
 }
 
-func (r *DefaultUserRepo) SaveWithTx(ctx context.Context, tx *gorm.DB, u domain.SysUser) (domain.SysUser, error) {
-	eu, err := r.dao.SaveWithTx(ctx, tx, dao.SysUser{
+func (r *DefaultUserRepo) Save(ctx context.Context, u domain.SysUser) (domain.SysUser, error) {
+	eu, err := r.dao.Save(ctx, dao.SysUser{
 		Id:        u.Id,
 		Email:     u.Email,
 		Password:  u.Password,
@@ -38,8 +37,8 @@ func (r *DefaultUserRepo) SaveWithTx(ctx context.Context, tx *gorm.DB, u domain.
 	return r.toDomain(eu), nil
 }
 
-func (r *DefaultUserRepo) DeleteByBizIdWithTx(ctx context.Context, tx *gorm.DB, bizId uint64) error {
-	return r.dao.DeleteByBizIdWithTx(ctx, tx, bizId)
+func (r *DefaultUserRepo) DeleteByBizId(ctx context.Context, bizId uint64) error {
+	return r.dao.DeleteByBizId(ctx, bizId)
 }
 
 func (r *DefaultUserRepo) FindByEmail(ctx context.Context, email string) (domain.SysUser, error) {

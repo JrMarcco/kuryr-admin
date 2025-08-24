@@ -64,7 +64,7 @@ func (s *DefaultProviderService) List(ctx context.Context) ([]domain.Provider, e
 		return nil, fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	resp, err := grpcClient.List(ctx, &providerv1.ListRequest{})
 	cancel()
 
@@ -88,7 +88,7 @@ func (s *DefaultProviderService) FindByChannel(ctx context.Context, channel int3
 		return nil, fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	resp, err := grpcClient.FindByChannel(ctx, &providerv1.FindByChannelRequest{Channel: commonv1.Channel(channel)})
 	cancel()
 
