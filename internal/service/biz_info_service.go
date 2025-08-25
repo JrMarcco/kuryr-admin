@@ -67,7 +67,7 @@ func (s *DefaultBizService) Save(ctx context.Context, bi domain.BizInfo) (domain
 		Password: passwd,
 		RealName: bi.Contact,
 		UserType: domain.UserTypeOperator,
-		BizId:    bi.Id,
+		BizId:    rtnBi.Id,
 	}
 
 	_, err = s.userRepo.Save(ctx, user)
@@ -109,27 +109,26 @@ func (s *DefaultBizService) Update(ctx context.Context, bi domain.BizInfo) (doma
 
 	if bi.ContactEmail != "" {
 		// 更新操作员信息
-		user, err := s.userRepo.FindByEmail(ctx, bi.ContactEmail)
+		user, err := s.userRepo.FindByBizId(ctx, bi.Id)
 		if err != nil {
-			s.logger.Error("[kuryr-admin] failed to find user", zap.Error(err))
+			s.logger.Error("[kuryr-admin] failed to find user by biz id", zap.Error(err))
 			return rtnBi, nil
 		}
 
-		if user.BizId != rtnBi.Id {
-			s.logger.Error("[kuryr-admin] user biz id not match", zap.Uint64("user_id", user.Id), zap.Uint64("biz_id", user.BizId), zap.Uint64("new_biz_id", rtnBi.Id))
-			return rtnBi, nil
-		}
-
-		toUpdate := domain.SysUser{
-			Id:    user.Id,
-			Email: bi.ContactEmail,
-		}
+		user.Email = bi.ContactEmail
 
 		if bi.Contact != "" {
-			toUpdate.RealName = bi.Contact
+			user.RealName = bi.Contact
 		}
 
-		_, err = s.userRepo.Save(ctx, toUpdate)
+		passwd, err := s.passwdGenerator.Generate(16)
+		if err != nil {
+			s.logger.Error("[kuryr-admin] failed to generate password", zap.Error(err))
+			return rtnBi, nil
+		}
+		user.Password = passwd
+
+		_, err = s.userRepo.Save(ctx, user)
 		if err != nil {
 			s.logger.Error("[kuryr-admin] failed to save user", zap.Error(err))
 			return rtnBi, nil

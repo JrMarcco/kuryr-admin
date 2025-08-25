@@ -27,6 +27,7 @@ type UserDao interface {
 	Save(ctx context.Context, u SysUser) (SysUser, error)
 
 	FindById(ctx context.Context, id uint64) (SysUser, error)
+	FindByBizId(ctx context.Context, bizId uint64) (SysUser, error)
 	FindByEmail(ctx context.Context, email string) (SysUser, error)
 	FindByMobile(ctx context.Context, mobile string) (SysUser, error)
 }
@@ -61,6 +62,14 @@ func (d *DefaultUserDao) FindById(ctx context.Context, id uint64) (SysUser, erro
 	var su SysUser
 	err := d.db.WithContext(ctx).Model(&SysUser{}).
 		Where("id = ?", id).
+		First(&su).Error
+	return su, err
+}
+
+func (d *DefaultUserDao) FindByBizId(ctx context.Context, bizId uint64) (SysUser, error) {
+	var su SysUser
+	err := d.db.WithContext(ctx).Model(&SysUser{}).
+		Where("biz_id = ?", bizId).
 		First(&su).Error
 	return su, err
 }

@@ -14,7 +14,7 @@ const (
 	LowerCase    = "abcdefghijklmnopqrstuvwxyz"
 	UpperCase    = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	Digits       = "0123456789"
-	Symbols      = "!@#$%^&*()_+-=[]{}|;:,.<>?"
+	Symbols      = "!@#$%^&*_+-=|;:,.<>?"
 	DefaultChars = LowerCase + UpperCase + Digits + Symbols
 )
 
