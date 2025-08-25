@@ -3,7 +3,7 @@ package ioc
 import (
 	"github.com/JrMarcco/easy-grpc/client"
 	"github.com/JrMarcco/kuryr-admin/internal/pkg/secret"
-	"github.com/JrMarcco/kuryr-admin/internal/pkg/secret/base64"
+	"github.com/JrMarcco/kuryr-admin/internal/pkg/secret/passwd"
 	"github.com/JrMarcco/kuryr-admin/internal/repository"
 	"github.com/JrMarcco/kuryr-admin/internal/service"
 	businessv1 "github.com/JrMarcco/kuryr-api/api/go/business/v1"
@@ -17,9 +17,8 @@ import (
 var ServiceFxOpt = fx.Module(
 	"service",
 	fx.Provide(
-		// user service
 		fx.Annotate(
-			base64.NewGenerator,
+			passwd.NewGenerator,
 			fx.As(new(secret.Generator)),
 		),
 		fx.Annotate(
@@ -59,10 +58,11 @@ func grpcServerName() string {
 func InitBizInfoService(
 	grpcClients *client.Manager[businessv1.BusinessServiceClient],
 	userRepo repository.UserRepo,
+	passwdGenerator secret.Generator,
 	logger *zap.Logger,
 ) *service.DefaultBizService {
 	return service.NewDefaultBizService(
-		grpcServerName(), grpcClients, userRepo, logger,
+		grpcServerName(), grpcClients, userRepo, passwdGenerator, logger,
 	)
 }
 

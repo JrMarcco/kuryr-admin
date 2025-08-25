@@ -9,7 +9,6 @@ import (
 
 type UserRepo interface {
 	Save(ctx context.Context, u domain.SysUser) (domain.SysUser, error)
-	DeleteByBizId(ctx context.Context, bizId uint64) error
 
 	FindById(ctx context.Context, id uint64) (domain.SysUser, error)
 	FindByEmail(ctx context.Context, email string) (domain.SysUser, error)
@@ -37,10 +36,6 @@ func (r *DefaultUserRepo) Save(ctx context.Context, u domain.SysUser) (domain.Sy
 		return domain.SysUser{}, err
 	}
 	return r.toDomain(eu), nil
-}
-
-func (r *DefaultUserRepo) DeleteByBizId(ctx context.Context, bizId uint64) error {
-	return r.dao.DeleteByBizId(ctx, bizId)
 }
 
 func (r *DefaultUserRepo) FindById(ctx context.Context, id uint64) (domain.SysUser, error) {

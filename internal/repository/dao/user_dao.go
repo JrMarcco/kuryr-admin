@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type SysUser struct {
@@ -24,7 +25,6 @@ func (SysUser) TableName() string {
 
 type UserDao interface {
 	Save(ctx context.Context, u SysUser) (SysUser, error)
-	DeleteByBizId(ctx context.Context, id uint64) error
 
 	FindById(ctx context.Context, id uint64) (SysUser, error)
 	FindByEmail(ctx context.Context, email string) (SysUser, error)
@@ -42,14 +42,19 @@ func (d *DefaultUserDao) Save(ctx context.Context, u SysUser) (SysUser, error) {
 	u.CreatedAt = now
 	u.UpdatedAt = now
 
-	err := d.db.WithContext(ctx).Model(&SysUser{}).Create(&u).Error
-	return u, err
-}
-
-func (d *DefaultUserDao) DeleteByBizId(ctx context.Context, id uint64) error {
-	return d.db.WithContext(ctx).Model(&SysUser{}).
-		Where("biz_id = ?", id).
-		Delete(&SysUser{}).Error
+	res := d.db.WithContext(ctx).Model(&SysUser{}).Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "id"}},
+		DoUpdates: clause.Assignments(map[string]any{
+			"email":      u.Email,
+			"password":   u.Password,
+			"real_name":  u.RealName,
+			"updated_at": now,
+		}),
+	}).Create(&u)
+	if res.Error != nil {
+		return SysUser{}, res.Error
+	}
+	return u, nil
 }
 
 func (d *DefaultUserDao) FindById(ctx context.Context, id uint64) (SysUser, error) {

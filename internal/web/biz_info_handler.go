@@ -65,8 +65,10 @@ func (h *BizInfoHandler) Save(ctx *gin.Context, req createBizReq, au pkggin.Auth
 }
 
 type updateBizReq struct {
-	Id      uint64 `json:"id"`
-	BizName string `json:"biz_name"`
+	Id           uint64 `json:"id"`
+	BizName      string `json:"biz_name"`
+	Contact      string `json:"contact"`
+	ContactEmail string `json:"contact_email"`
 }
 
 func (h *BizInfoHandler) Update(ctx *gin.Context, req updateBizReq, au pkggin.AuthUser) (pkggin.R, error) {
@@ -78,8 +80,10 @@ func (h *BizInfoHandler) Update(ctx *gin.Context, req updateBizReq, au pkggin.Au
 	}
 
 	bi := domain.BizInfo{
-		Id:      req.Id,
-		BizName: req.BizName,
+		Id:           req.Id,
+		BizName:      req.BizName,
+		Contact:      req.Contact,
+		ContactEmail: req.ContactEmail,
 	}
 	bi, err := h.svc.Update(ctx, bi)
 	if err != nil {

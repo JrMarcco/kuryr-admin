@@ -42,10 +42,10 @@ X-ACCESS-TOKEN: {{login.response.body.$.data.access_token}}
 Content-Type: application/json
 
 {
-    "id": 1,
-    "biz_name": "test business info 1",
-    "contact": "test contact 1",
-    "contact_email": "test_contact_email_1@example.com"
+    "id": 11,
+    "biz_name": "updated business info 1",
+    "contact": "updated contact",
+    "contact_email": "updated_contact_email_1@example.com"
 }
 
 

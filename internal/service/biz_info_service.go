@@ -9,6 +9,7 @@ import (
 	"github.com/JrMarcco/easy-kit/slice"
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
 	pkggorm "github.com/JrMarcco/kuryr-admin/internal/pkg/gorm"
+	"github.com/JrMarcco/kuryr-admin/internal/pkg/secret"
 	"github.com/JrMarcco/kuryr-admin/internal/repository"
 	"github.com/JrMarcco/kuryr-admin/internal/search"
 	businessv1 "github.com/JrMarcco/kuryr-api/api/go/business/v1"
@@ -33,7 +34,8 @@ type DefaultBizService struct {
 
 	userRepo repository.UserRepo
 
-	logger *zap.Logger
+	passwdGenerator secret.Generator
+	logger          *zap.Logger
 }
 
 func (s *DefaultBizService) Save(ctx context.Context, bi domain.BizInfo) (domain.BizInfo, error) {
@@ -42,7 +44,7 @@ func (s *DefaultBizService) Save(ctx context.Context, bi domain.BizInfo) (domain
 		return domain.BizInfo{}, fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	resp, err := grpcClient.Save(ctx, &businessv1.SaveRequest{BusinessInfo: s.domainToPb(bi)})
@@ -51,7 +53,30 @@ func (s *DefaultBizService) Save(ctx context.Context, bi domain.BizInfo) (domain
 		return domain.BizInfo{}, fmt.Errorf("[kuryr-admin] failed to save biz info: %w", err)
 	}
 
-	return s.pbToDomain(resp.BusinessInfo), nil
+	rtnBi := s.pbToDomain(resp.BusinessInfo)
+
+	// 创建操作员
+	passwd, err := s.passwdGenerator.Generate(16)
+	if err != nil {
+		s.logger.Error("[kuryr-admin] failed to generate password", zap.Error(err))
+		return rtnBi, nil
+	}
+
+	user := domain.SysUser{
+		Email:    bi.ContactEmail,
+		Password: passwd,
+		RealName: bi.Contact,
+		UserType: domain.UserTypeOperator,
+		BizId:    bi.Id,
+	}
+
+	_, err = s.userRepo.Save(ctx, user)
+	if err != nil {
+		s.logger.Error("[kuryr-admin] failed to save user", zap.Error(err))
+		return rtnBi, nil
+	}
+
+	return rtnBi, nil
 }
 
 func (s *DefaultBizService) Update(ctx context.Context, bi domain.BizInfo) (domain.BizInfo, error) {
@@ -80,7 +105,38 @@ func (s *DefaultBizService) Update(ctx context.Context, bi domain.BizInfo) (doma
 		return domain.BizInfo{}, fmt.Errorf("[kuryr-admin] failed to update biz info: %w", err)
 	}
 
-	return s.pbToDomain(resp.BusinessInfo), nil
+	rtnBi := s.pbToDomain(resp.BusinessInfo)
+
+	if bi.ContactEmail != "" {
+		// 更新操作员信息
+		user, err := s.userRepo.FindByEmail(ctx, bi.ContactEmail)
+		if err != nil {
+			s.logger.Error("[kuryr-admin] failed to find user", zap.Error(err))
+			return rtnBi, nil
+		}
+
+		if user.BizId != rtnBi.Id {
+			s.logger.Error("[kuryr-admin] user biz id not match", zap.Uint64("user_id", user.Id), zap.Uint64("biz_id", user.BizId), zap.Uint64("new_biz_id", rtnBi.Id))
+			return rtnBi, nil
+		}
+
+		toUpdate := domain.SysUser{
+			Id:    user.Id,
+			Email: bi.ContactEmail,
+		}
+
+		if bi.Contact != "" {
+			toUpdate.RealName = bi.Contact
+		}
+
+		_, err = s.userRepo.Save(ctx, toUpdate)
+		if err != nil {
+			s.logger.Error("[kuryr-admin] failed to save user", zap.Error(err))
+			return rtnBi, nil
+		}
+	}
+
+	return rtnBi, nil
 }
 
 func (s *DefaultBizService) Delete(ctx context.Context, id uint64) error {
@@ -207,14 +263,19 @@ func (s *DefaultBizService) pbToDomain(pb *businessv1.BusinessInfo) domain.BizIn
 	}
 }
 func NewDefaultBizService(
-	grpcServerName string, grpcClients *client.Manager[businessv1.BusinessServiceClient],
+	grpcServerName string,
+	grpcClients *client.Manager[businessv1.BusinessServiceClient],
 	userRepo repository.UserRepo,
+	passwdGenerator secret.Generator,
 	logger *zap.Logger,
 ) *DefaultBizService {
 	return &DefaultBizService{
 		grpcServerName: grpcServerName,
 		grpcClients:    grpcClients,
-		userRepo:       userRepo,
-		logger:         logger,
+
+		userRepo: userRepo,
+
+		passwdGenerator: passwdGenerator,
+		logger:          logger,
 	}
 }
