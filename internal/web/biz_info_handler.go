@@ -26,6 +26,7 @@ func (h *BizInfoHandler) RegisterRoutes(engine *gin.Engine) {
 	v1.Handle(http.MethodPut, "/update", pkggin.BU(h.Update))
 	v1.Handle(http.MethodDelete, "/delete", pkggin.QU(h.Delete))
 	v1.Handle(http.MethodGet, "/search", pkggin.QU(h.Search))
+	v1.Handle(http.MethodGet, "/get", pkggin.QU(h.FindById))
 }
 
 type createBizReq struct {
@@ -139,6 +140,28 @@ func (h *BizInfoHandler) Search(ctx *gin.Context, req searchBizReq, au pkggin.Au
 	return pkggin.R{
 		Code: http.StatusOK,
 		Data: res,
+	}, nil
+}
+
+type findBizByIdReq struct {
+	BizId uint64 `json:"biz_id" form:"biz_id"`
+}
+
+func (h *BizInfoHandler) FindById(ctx *gin.Context, req findBizByIdReq, au pkggin.AuthUser) (pkggin.R, error) {
+	if au.UserType != domain.UserTypeAdmin && req.BizId != au.Bid {
+		return pkggin.R{
+			Code: http.StatusForbidden,
+			Msg:  "[kuryr-admin] operator can only find own biz info",
+		}, nil
+	}
+
+	bi, err := h.svc.FindById(ctx, req.BizId)
+	if err != nil {
+		return pkggin.R{}, err
+	}
+	return pkggin.R{
+		Code: http.StatusOK,
+		Data: bi,
 	}, nil
 }
 

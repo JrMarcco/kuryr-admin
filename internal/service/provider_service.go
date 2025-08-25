@@ -32,8 +32,9 @@ func (s *DefaultProviderService) Save(ctx context.Context, provider domain.Provi
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
 	_, err = grpcClient.Save(ctx, &providerv1.SaveRequest{Provider: s.domainToPb(provider)})
-	cancel()
 
 	if err != nil {
 		return fmt.Errorf("[kuryr-admin] failed to save provider: %w", err)
@@ -65,8 +66,9 @@ func (s *DefaultProviderService) List(ctx context.Context) ([]domain.Provider, e
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
 	resp, err := grpcClient.List(ctx, &providerv1.ListRequest{})
-	cancel()
 
 	if err != nil {
 		return nil, fmt.Errorf("[kuryr-admin] failed to list providers: %w", err)
@@ -89,8 +91,9 @@ func (s *DefaultProviderService) FindByChannel(ctx context.Context, channel int3
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
 	resp, err := grpcClient.FindByChannel(ctx, &providerv1.FindByChannelRequest{Channel: commonv1.Channel(channel)})
-	cancel()
 
 	if err != nil {
 		return nil, fmt.Errorf("[kuryr-admin] failed to find providers by channel: %w", err)

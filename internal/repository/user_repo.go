@@ -11,7 +11,9 @@ type UserRepo interface {
 	Save(ctx context.Context, u domain.SysUser) (domain.SysUser, error)
 	DeleteByBizId(ctx context.Context, bizId uint64) error
 
+	FindById(ctx context.Context, id uint64) (domain.SysUser, error)
 	FindByEmail(ctx context.Context, email string) (domain.SysUser, error)
+	FindByMobile(ctx context.Context, mobile string) (domain.SysUser, error)
 }
 
 var _ UserRepo = (*DefaultUserRepo)(nil)
@@ -41,8 +43,24 @@ func (r *DefaultUserRepo) DeleteByBizId(ctx context.Context, bizId uint64) error
 	return r.dao.DeleteByBizId(ctx, bizId)
 }
 
+func (r *DefaultUserRepo) FindById(ctx context.Context, id uint64) (domain.SysUser, error) {
+	eu, err := r.dao.FindById(ctx, id)
+	if err != nil {
+		return domain.SysUser{}, err
+	}
+	return r.toDomain(eu), nil
+}
+
 func (r *DefaultUserRepo) FindByEmail(ctx context.Context, email string) (domain.SysUser, error) {
 	eu, err := r.dao.FindByEmail(ctx, email)
+	if err != nil {
+		return domain.SysUser{}, err
+	}
+	return r.toDomain(eu), nil
+}
+
+func (r *DefaultUserRepo) FindByMobile(ctx context.Context, mobile string) (domain.SysUser, error) {
+	eu, err := r.dao.FindByMobile(ctx, mobile)
 	if err != nil {
 		return domain.SysUser{}, err
 	}

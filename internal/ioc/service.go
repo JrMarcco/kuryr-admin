@@ -11,6 +11,7 @@ import (
 	providerv1 "github.com/JrMarcco/kuryr-api/api/go/provider/v1"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
+	"go.uber.org/zap"
 )
 
 var ServiceFxOpt = fx.Module(
@@ -55,9 +56,13 @@ func grpcServerName() string {
 	return name
 }
 
-func InitBizInfoService(grpcClients *client.Manager[businessv1.BusinessServiceClient], userRepo repository.UserRepo) *service.DefaultBizService {
+func InitBizInfoService(
+	grpcClients *client.Manager[businessv1.BusinessServiceClient],
+	userRepo repository.UserRepo,
+	logger *zap.Logger,
+) *service.DefaultBizService {
 	return service.NewDefaultBizService(
-		grpcServerName(), grpcClients, userRepo,
+		grpcServerName(), grpcClients, userRepo, logger,
 	)
 }
 

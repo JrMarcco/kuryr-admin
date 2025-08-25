@@ -1,6 +1,3 @@
-# @env http_proxy=
-# @env https_proxy=
-
 @uri = http://localhost:8080
 
 ### Login
@@ -34,7 +31,7 @@ Content-Type: application/json
     "biz_type": "individual",
     "biz_key": "test_business_info_1",
     "biz_name": "test business info 1",
-    "contact": "test contact 1",
+    "contact": "test contact",
     "contact_email": "test_contact_email_1@example.com"
 }
 
@@ -52,18 +49,23 @@ Content-Type: application/json
 }
 
 
-#### Search Biz Info
-GET http://localhost:8080/api/v1/biz_info/search?offset=0&limit=10
+### Search Biz Info
+GET {{uri}}/api/v1/biz_info/search?offset=0&limit=10
 X-ACCESS-TOKEN: {{login.response.body.$.data.access_token}}
 
 
-#### Get Business Config
-GET http://localhost:8080/api/v1/biz_config/get?biz_id=1
+### Find Biz Info By Id
+GET {{uri}}/api/v1/biz_info/get?biz_id=4
 X-ACCESS-TOKEN: {{login.response.body.$.data.access_token}}
 
 
-#### Save Biz Config
-POST http://localhost:8080/api/v1/biz_config/save
+### Get Business Config
+GET {{uri}}/api/v1/biz_config/get?biz_id=1
+X-ACCESS-TOKEN: {{login.response.body.$.data.access_token}}
+
+
+### Save Biz Config
+POST {{uri}}/api/v1/biz_config/save
 X-ACCESS-TOKEN: {{login.response.body.$.data.access_token}}
 Content-Type: application/json
 
@@ -106,14 +108,14 @@ Content-Type: application/json
 
 
 
-#### List Provider
-GET http://localhost:8080/api/v1/provider/list
+### List Provider
+GET {{uri}}/api/v1/provider/list
 X-ACCESS-TOKEN: {{login.response.body.$.data.access_token}}
 
 
 
-#### Save Provider
-POST http://localhost:8080/api/v1/provider/save
+### Save Provider
+POST {{uri}}/api/v1/provider/save
 X-ACCESS-TOKEN: {{login.response.body.$.data.access_token}}
 Content-Type: application/json
 

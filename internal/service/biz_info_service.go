@@ -12,6 +12,7 @@ import (
 	"github.com/JrMarcco/kuryr-admin/internal/repository"
 	"github.com/JrMarcco/kuryr-admin/internal/search"
 	businessv1 "github.com/JrMarcco/kuryr-api/api/go/business/v1"
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
@@ -21,6 +22,7 @@ type BizService interface {
 	Delete(ctx context.Context, id uint64) error
 
 	Search(ctx context.Context, criteria search.BizSearchCriteria, param *pkggorm.PaginationParam) (*pkggorm.PaginationResult[domain.BizInfo], error)
+	FindById(ctx context.Context, id uint64) (domain.BizInfo, error)
 }
 
 var _ BizService = (*DefaultBizService)(nil)
@@ -30,6 +32,8 @@ type DefaultBizService struct {
 	grpcClients    *client.Manager[businessv1.BusinessServiceClient]
 
 	userRepo repository.UserRepo
+
+	logger *zap.Logger
 }
 
 func (s *DefaultBizService) Save(ctx context.Context, bi domain.BizInfo) (domain.BizInfo, error) {
@@ -39,14 +43,13 @@ func (s *DefaultBizService) Save(ctx context.Context, bi domain.BizInfo) (domain
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
 	resp, err := grpcClient.Save(ctx, &businessv1.SaveRequest{BusinessInfo: s.domainToPb(bi)})
-	cancel()
 
 	if err != nil {
 		return domain.BizInfo{}, fmt.Errorf("[kuryr-admin] failed to save biz info: %w", err)
 	}
-
-	// TODO: 新增操作员信息
 
 	return s.pbToDomain(resp.BusinessInfo), nil
 }
@@ -66,17 +69,16 @@ func (s *DefaultBizService) Update(ctx context.Context, bi domain.BizInfo) (doma
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
 	resp, err := grpcClient.Update(ctx, &businessv1.UpdateRequest{
 		FieldMask:    fieldMask,
 		BusinessInfo: s.domainToPb(bi),
 	})
-	cancel()
 
 	if err != nil {
 		return domain.BizInfo{}, fmt.Errorf("[kuryr-admin] failed to update biz info: %w", err)
 	}
-
-	// TODO: 修改操作员信息
 
 	return s.pbToDomain(resp.BusinessInfo), nil
 }
@@ -88,8 +90,9 @@ func (s *DefaultBizService) Delete(ctx context.Context, id uint64) error {
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
 	_, err = grpcClient.Delete(ctx, &businessv1.DeleteRequest{BizId: id})
-	cancel()
 
 	if err != nil {
 		return fmt.Errorf("[kuryr-admin] failed to delete biz info: %w", err)
@@ -104,6 +107,8 @@ func (s *DefaultBizService) Search(ctx context.Context, criteria search.BizSearc
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
 	resp, err := grpcClient.Search(ctx, &businessv1.SearchRequest{
 		FieldMask: &fieldmaskpb.FieldMask{
 			Paths: []string{
@@ -116,7 +121,6 @@ func (s *DefaultBizService) Search(ctx context.Context, criteria search.BizSearc
 		Limit:   int32(param.Limit),
 		BizName: criteria.BizName,
 	})
-	cancel()
 
 	if err != nil {
 		return nil, fmt.Errorf("[kuryr-admin] failed to search biz info: %w", err)
@@ -128,6 +132,51 @@ func (s *DefaultBizService) Search(ctx context.Context, criteria search.BizSearc
 			return s.pbToDomain(src)
 		}),
 	}, nil
+}
+
+func (s *DefaultBizService) FindById(ctx context.Context, id uint64) (domain.BizInfo, error) {
+	grpcClient, err := s.grpcClients.Get(s.grpcServerName)
+	if err != nil {
+		return domain.BizInfo{}, fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
+	}
+
+	fieldMask := &fieldmaskpb.FieldMask{
+		Paths: []string{
+			businessv1.FieldId,
+			businessv1.FieldBizKey,
+			businessv1.FieldBizName,
+			businessv1.FieldBizType,
+			businessv1.FieldBizSecret,
+			businessv1.FieldContact,
+			businessv1.FieldContactEmail,
+			businessv1.FieldCreatorId,
+			businessv1.FieldCreatedAt,
+			businessv1.FieldUpdatedAt,
+		},
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	resp, err := grpcClient.FindById(ctx, &businessv1.FindByIdRequest{
+		FieldMask: fieldMask,
+		BizId:     id,
+	})
+	if err != nil {
+		return domain.BizInfo{}, fmt.Errorf("[kuryr-admin] failed to find biz info: %w", err)
+	}
+
+	bi := s.pbToDomain(resp.BusinessInfo)
+
+	user, err := s.userRepo.FindById(ctx, bi.CreatorId)
+	if err != nil {
+		s.logger.Warn("[kuryr-admin] failed to find user", zap.Error(err))
+	}
+
+	user.Password = "" // 不返回密码
+	bi.Creator = user
+
+	return bi, nil
 }
 
 func (s *DefaultBizService) domainToPb(bi domain.BizInfo) *businessv1.BusinessInfo {
@@ -160,10 +209,12 @@ func (s *DefaultBizService) pbToDomain(pb *businessv1.BusinessInfo) domain.BizIn
 func NewDefaultBizService(
 	grpcServerName string, grpcClients *client.Manager[businessv1.BusinessServiceClient],
 	userRepo repository.UserRepo,
+	logger *zap.Logger,
 ) *DefaultBizService {
 	return &DefaultBizService{
 		grpcServerName: grpcServerName,
 		grpcClients:    grpcClients,
 		userRepo:       userRepo,
+		logger:         logger,
 	}
 }
