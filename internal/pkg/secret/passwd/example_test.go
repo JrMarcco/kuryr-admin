@@ -1,15 +1,13 @@
-package passwd_test
+package passwd
 
 import (
 	"fmt"
 	"log"
-
-	"github.com/JrMarcco/kuryr-admin/internal/pkg/secret/passwd"
 )
 
 func ExampleSimpleGenerate() {
 	// 简单生成16位密码
-	pwd, err := passwd.SimpleGenerate(16)
+	pwd, err := SimpleGenerate(16)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -19,7 +17,7 @@ func ExampleSimpleGenerate() {
 
 func ExampleSecureGenerate() {
 	// 生成包含所有字符类型的安全密码
-	pwd, err := passwd.SecureGenerate(20)
+	pwd, err := SecureGenerate(20)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -29,7 +27,7 @@ func ExampleSecureGenerate() {
 
 func ExampleNewGenerator_basic() {
 	// 创建默认生成器
-	g := passwd.NewGenerator()
+	g := NewGenerator()
 
 	pwd, err := g.Generate(12)
 	if err != nil {
@@ -41,9 +39,9 @@ func ExampleNewGenerator_basic() {
 
 func ExampleNewGenerator_customCharset() {
 	// 只使用字母和数字
-	g := passwd.NewGenerator(
-		passwd.WithCharset(passwd.LowerCase+passwd.UpperCase+passwd.Digits),
-		passwd.WithRequirements(true, true, true, false), // 不要求特殊字符
+	g := NewGenerator(
+		WithCharset(LowerCase+UpperCase+Digits),
+		WithRequirements(true, true, true, false), // 不要求特殊字符
 	)
 
 	pwd, err := g.Generate(16)
@@ -56,10 +54,10 @@ func ExampleNewGenerator_customCharset() {
 
 func ExampleNewGenerator_onlyDigits() {
 	// 生成纯数字密码（如PIN码）
-	g := passwd.NewGenerator(
-		passwd.WithCharset(passwd.Digits),
-		passwd.WithRequirements(false, false, false, false),
-		passwd.WithMinLength(4),
+	g := NewGenerator(
+		WithCharset(Digits),
+		WithRequirements(false, false, false, false),
+		WithMinLength(4),
 	)
 
 	pin, err := g.Generate(6)
@@ -71,7 +69,7 @@ func ExampleNewGenerator_onlyDigits() {
 }
 
 func ExampleGenerator_GenerateWithPrefix() {
-	g := passwd.NewGenerator()
+	g := NewGenerator()
 
 	// 生成带前缀的密码，适用于临时密码等场景
 	pwd, err := g.GenerateWithPrefix("TEMP", 24)
