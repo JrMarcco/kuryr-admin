@@ -6,11 +6,11 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/JrMarcco/easy-kit/bean/option"
 	"github.com/JrMarcco/kuryr-admin/internal/pkg/secret"
 )
 
 const (
-	// 字符集定义
 	LowerCase    = "abcdefghijklmnopqrstuvwxyz"
 	UpperCase    = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	Digits       = "0123456789"
@@ -21,7 +21,6 @@ const (
 var _ secret.Generator = (*Generator)(nil)
 
 type Generator struct {
-	// 可选配置
 	charset    string
 	minLength  int
 	mustLower  bool
@@ -30,24 +29,22 @@ type Generator struct {
 	mustSymbol bool
 }
 
-type Option func(*Generator)
-
-// WithCharset 自定义字符集
-func WithCharset(charset string) Option {
+// WithCharset 自定义字符集。
+func WithCharset(charset string) option.Opt[Generator] {
 	return func(g *Generator) {
 		g.charset = charset
 	}
 }
 
-// WithMinLength 最小长度
-func WithMinLength(minLength int) Option {
+// WithMinLength 最小长度。
+func WithMinLength(minLength int) option.Opt[Generator] {
 	return func(g *Generator) {
 		g.minLength = minLength
 	}
 }
 
-// WithRequirements 设置密码复杂度要求
-func WithRequirements(lower, upper, digit, symbol bool) Option {
+// WithRequirements 设置密码复杂度要求。
+func WithRequirements(lower, upper, digit, symbol bool) option.Opt[Generator] {
 	return func(g *Generator) {
 		g.mustLower = lower
 		g.mustUpper = upper
@@ -56,8 +53,8 @@ func WithRequirements(lower, upper, digit, symbol bool) Option {
 	}
 }
 
-// NewGenerator 创建密码生成器
-func NewGenerator(opts ...Option) *Generator {
+// NewGenerator 创建密码生成器。
+func NewGenerator(opts ...option.Opt[Generator]) *Generator {
 	g := &Generator{
 		charset:    DefaultChars,
 		minLength:  8,
@@ -74,7 +71,7 @@ func NewGenerator(opts ...Option) *Generator {
 	return g
 }
 
-// Generate 生成随机密码
+// Generate 生成随机密码。
 func (g *Generator) Generate(length int) (string, error) {
 	if length < g.minLength {
 		return "", fmt.Errorf("password length must be at least %d", g.minLength)
@@ -83,7 +80,7 @@ func (g *Generator) Generate(length int) (string, error) {
 	var password strings.Builder
 	password.Grow(length)
 
-	// 如果有复杂度要求，先确保满足每种字符类型
+	// 如果有复杂度要求，先确保满足每种字符类型。
 	guaranteed := 0
 	if g.mustLower {
 		char, err := randomChar(LowerCase)
@@ -121,7 +118,7 @@ func (g *Generator) Generate(length int) (string, error) {
 		guaranteed++
 	}
 
-	// 填充剩余长度
+	// 填充剩余长度。
 	for i := guaranteed; i < length; i++ {
 		char, err := randomChar(g.charset)
 		if err != nil {
@@ -130,11 +127,11 @@ func (g *Generator) Generate(length int) (string, error) {
 		password.WriteString(char)
 	}
 
-	// 打乱密码字符顺序
+	// 打乱密码字符顺序。
 	return shuffle(password.String())
 }
 
-// GenerateWithPrefix 带前缀的密码生成
+// GenerateWithPrefix 带前缀的密码生成。
 func (g *Generator) GenerateWithPrefix(prefix string, length int) (string, error) {
 	prefixLen := len(prefix)
 	if prefixLen >= length {
@@ -149,7 +146,7 @@ func (g *Generator) GenerateWithPrefix(prefix string, length int) (string, error
 	return fmt.Sprintf("%s_%s", prefix, password), nil
 }
 
-// randomChar 从字符集中随机选择一个字符
+// randomChar 从字符集中随机选择一个字符。
 func randomChar(charset string) (string, error) {
 	if len(charset) == 0 {
 		return "", fmt.Errorf("charset is empty")
@@ -164,7 +161,7 @@ func randomChar(charset string) (string, error) {
 	return string(charset[n.Int64()]), nil
 }
 
-// shuffle 打乱字符串顺序
+// shuffle 打乱字符串顺序。
 func shuffle(s string) (string, error) {
 	if len(s) <= 1 {
 		return s, nil
@@ -184,13 +181,13 @@ func shuffle(s string) (string, error) {
 	return string(runes), nil
 }
 
-// SimpleGenerate 简单快速生成密码的函数
+// SimpleGenerate 简单快速生成密码的函数。
 func SimpleGenerate(length int) (string, error) {
 	g := NewGenerator()
 	return g.Generate(length)
 }
 
-// SecureGenerate 生成安全密码（包含所有字符类型）
+// SecureGenerate 生成安全密码（包含所有字符类型）。
 func SecureGenerate(length int) (string, error) {
 	g := NewGenerator(WithRequirements(true, true, true, true))
 	return g.Generate(length)

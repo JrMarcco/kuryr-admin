@@ -14,7 +14,7 @@ func TestGenerator_Generate(t *testing.T) {
 		checkFunc func(string) bool
 	}{
 		{
-			name:      "默认生成器",
+			name:      "default generator",
 			generator: NewGenerator(),
 			length:    16,
 			wantErr:   false,
@@ -26,7 +26,7 @@ func TestGenerator_Generate(t *testing.T) {
 			},
 		},
 		{
-			name:      "安全密码生成",
+			name:      "secure password generator",
 			generator: NewGenerator(WithRequirements(true, true, true, true)),
 			length:    20,
 			wantErr:   false,
@@ -39,7 +39,7 @@ func TestGenerator_Generate(t *testing.T) {
 			},
 		},
 		{
-			name:      "仅数字密码",
+			name:      "only digits password",
 			generator: NewGenerator(WithCharset(Digits), WithRequirements(false, false, false, false)),
 			length:    8,
 			wantErr:   false,
@@ -48,13 +48,13 @@ func TestGenerator_Generate(t *testing.T) {
 			},
 		},
 		{
-			name:      "长度过短",
+			name:      "password too short",
 			generator: NewGenerator(),
 			length:    4,
 			wantErr:   true,
 		},
 		{
-			name:      "自定义最小长度",
+			name:      "custom minimum length",
 			generator: NewGenerator(WithMinLength(12)),
 			length:    10,
 			wantErr:   true,
