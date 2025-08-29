@@ -82,7 +82,7 @@ func (h *BizConfigHandler) Save(ctx *gin.Context, req saveBizConfigReq) (pkggin.
 
 	// 构建 domain.BizConfig
 	bizConfig := domain.BizConfig{
-		Id:        req.BizId,
+		BizId:     req.BizId,
 		RateLimit: req.RateLimit,
 	}
 

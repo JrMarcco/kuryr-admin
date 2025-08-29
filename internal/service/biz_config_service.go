@@ -7,8 +7,11 @@ import (
 
 	"github.com/JrMarcco/easy-grpc/client"
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
+	"github.com/JrMarcco/kuryr-admin/internal/errs"
 	commonv1 "github.com/JrMarcco/kuryr-api/api/go/common/v1"
 	configv1 "github.com/JrMarcco/kuryr-api/api/go/config/v1"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
@@ -25,50 +28,37 @@ type DefaultBizConfigService struct {
 }
 
 func (s *DefaultBizConfigService) Save(ctx context.Context, bizConfig domain.BizConfig) error {
-	// TODO: implement me
-	panic("implement me")
-	// bi, err := s.bizRepo.FindById(ctx, bizConfig.Id)
-	// if err != nil {
-	// 	if errors.Is(err, gorm.ErrRecordNotFound) {
-	// 		return fmt.Errorf("[kuryr-admin] failed to find biz info [ %d ]", bizConfig.Id)
-	// 	}
-	// 	return fmt.Errorf("[kuryr-admin] failed to find biz info: %w", err)
-	// }
+	grpcClient, err := s.grpcClients.Get(s.grpcServerName)
+	if err != nil {
+		return fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
+	}
 
-	// grpcClient, err := s.grpcClients.Get(s.grpcServerName)
-	// if err != nil {
-	// 	return fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
-	// }
+	// 构建 grpc 请求
+	pb := &configv1.BizConfig{
+		BizId:     bizConfig.BizId,
+		OwnerType: string(bizConfig.OwnerType),
+		RateLimit: bizConfig.RateLimit,
+	}
 
-	// // 构建 grpc 请求
-	// pb := &configv1.BizConfig{
-	// 	BizId:     bi.Id,
-	// 	OwnerType: string(bizConfig.OwnerType),
-	// 	RateLimit: bizConfig.RateLimit,
-	// }
+	if bizConfig.ChannelConfig != nil {
+		pb.ChannelConfig = s.convertToPbChannel(bizConfig.ChannelConfig)
+	}
+	if bizConfig.QuotaConfig != nil {
+		pb.QuotaConfig = s.convertToQuota(bizConfig.QuotaConfig)
+	}
 
-	// if bizConfig.ChannelConfig != nil {
-	// 	pb.ChannelConfig = s.convertToPbChannel(bizConfig.ChannelConfig)
-	// }
-	// if bizConfig.QuotaConfig != nil {
-	// 	pb.QuotaConfig = s.convertToQuota(bizConfig.QuotaConfig)
-	// }
+	if bizConfig.CallbackConfig != nil {
+		pb.CallbackConfig = s.convertToPbCallback(bizConfig.CallbackConfig)
+	}
 
-	// if bizConfig.CallbackConfig != nil {
-	// 	pb.CallbackConfig = s.convertToPbCallback(bizConfig.CallbackConfig)
-	// }
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	_, err = grpcClient.Save(ctx, &configv1.SaveRequest{BizConfig: pb})
+	cancel()
 
-	// ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	// resp, err := grpcClient.Save(ctx, &configv1.SaveRequest{Config: pb})
-	// cancel()
-
-	// if err != nil {
-	// 	return fmt.Errorf("[kuryr-admin] failed to save biz config: %w", err)
-	// }
-	// if !resp.Success {
-	// 	return fmt.Errorf("[kuryr-admin] failed to save biz config: [ %s ]", resp.ErrMsg)
-	// }
-	// return nil
+	if err != nil {
+		return fmt.Errorf("[kuryr-admin] failed to save biz config: %w", err)
+	}
+	return nil
 }
 
 // convertToPbChannel 渠道配置 proto buf
@@ -138,6 +128,9 @@ func (s *DefaultBizConfigService) FindByBizId(ctx context.Context, id uint64) (d
 		BizId:     id,
 	})
 	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return domain.BizConfig{}, errs.ErrRecordNotFound
+		}
 		return domain.BizConfig{}, fmt.Errorf("[kuryr-admin] failed to get biz config: %w", err)
 	}
 	return s.pbToDomain(resp.BizConfig), nil
