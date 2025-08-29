@@ -35,6 +35,7 @@ func (s *DefaultBizConfigService) Save(ctx context.Context, bizConfig domain.Biz
 
 	// 构建 grpc 请求
 	pb := &configv1.BizConfig{
+		Id:        bizConfig.Id,
 		BizId:     bizConfig.BizId,
 		OwnerType: string(bizConfig.OwnerType),
 		RateLimit: bizConfig.RateLimit,
@@ -52,7 +53,22 @@ func (s *DefaultBizConfigService) Save(ctx context.Context, bizConfig domain.Biz
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	_, err = grpcClient.Save(ctx, &configv1.SaveRequest{BizConfig: pb})
+	if bizConfig.Id == 0 {
+		_, err = grpcClient.Save(ctx, &configv1.SaveRequest{BizConfig: pb})
+	} else {
+		fieldMask := &fieldmaskpb.FieldMask{
+			Paths: []string{
+				configv1.FieldChannelConfig,
+				configv1.FieldQuotaConfig,
+				configv1.FieldCallbackConfig,
+				configv1.FieldRateLimit,
+			},
+		}
+		_, err = grpcClient.Update(ctx, &configv1.UpdateRequest{
+			FieldMask: fieldMask,
+			BizConfig: pb,
+		})
+	}
 	cancel()
 
 	if err != nil {
@@ -138,7 +154,8 @@ func (s *DefaultBizConfigService) FindByBizId(ctx context.Context, id uint64) (d
 
 func (s *DefaultBizConfigService) pbToDomain(pb *configv1.BizConfig) domain.BizConfig {
 	bizConfig := domain.BizConfig{
-		Id:        pb.BizId,
+		Id:        pb.Id,
+		BizId:     pb.BizId,
 		OwnerType: domain.BizType(pb.OwnerType),
 		RateLimit: pb.RateLimit,
 	}

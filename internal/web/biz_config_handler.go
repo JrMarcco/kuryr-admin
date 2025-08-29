@@ -26,6 +26,7 @@ func (h *BizConfigHandler) RegisterRoutes(engine *gin.Engine) {
 }
 
 type saveBizConfigReq struct {
+	Id             uint64          `json:"id"`
 	BizId          uint64          `json:"biz_id"`
 	ChannelConfig  *channelConfig  `json:"channel_config,omitempty"`
 	QuotaConfig    *quotaConfig    `json:"quota_config,omitempty"`
@@ -82,6 +83,7 @@ func (h *BizConfigHandler) Save(ctx *gin.Context, req saveBizConfigReq) (pkggin.
 
 	// 构建 domain.BizConfig
 	bizConfig := domain.BizConfig{
+		Id:        req.Id,
 		BizId:     req.BizId,
 		RateLimit: req.RateLimit,
 	}
