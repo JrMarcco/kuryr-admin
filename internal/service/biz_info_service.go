@@ -14,6 +14,7 @@ import (
 	"github.com/JrMarcco/kuryr-admin/internal/search"
 	businessv1 "github.com/JrMarcco/kuryr-api/api/go/business/v1"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
@@ -62,9 +63,15 @@ func (s *DefaultBizService) Save(ctx context.Context, bi domain.BizInfo) (domain
 		return rtnBi, nil
 	}
 
+	bcryptPwd, err := bcrypt.GenerateFromPassword([]byte(passwd), bcrypt.DefaultCost)
+	if err != nil {
+		s.logger.Error("[kuryr-admin] failed to generate password", zap.Error(err))
+		return rtnBi, nil
+	}
+
 	user := domain.SysUser{
 		Email:    bi.ContactEmail,
-		Password: passwd,
+		Password: string(bcryptPwd),
 		RealName: bi.Contact,
 		UserType: domain.UserTypeOperator,
 		BizId:    rtnBi.Id,

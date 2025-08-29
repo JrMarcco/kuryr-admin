@@ -20,7 +20,7 @@ func (h *ProviderHandler) RegisterRoutes(engine *gin.Engine) {
 
 	v1.Handle(http.MethodPost, "/save", pkggin.B(h.Save))
 	v1.Handle(http.MethodGet, "/list", pkggin.W(h.List))
-	v1.Handle(http.MethodGet, "/find-by-channel", pkggin.Q(h.FindByChannel))
+	v1.Handle(http.MethodGet, "/find_by_channel", pkggin.Q(h.FindByChannel))
 }
 
 type saveProviderReq struct {
@@ -63,6 +63,10 @@ func (h *ProviderHandler) Save(ctx *gin.Context, req saveProviderReq) (pkggin.R,
 	return pkggin.R{Code: http.StatusOK}, nil
 }
 
+type listProviderResp struct {
+	Records []domain.Provider `json:"records"`
+}
+
 func (h *ProviderHandler) List(ctx *gin.Context) (pkggin.R, error) {
 	res, err := h.svc.List(ctx)
 	if err != nil {
@@ -71,7 +75,9 @@ func (h *ProviderHandler) List(ctx *gin.Context) (pkggin.R, error) {
 
 	return pkggin.R{
 		Code: http.StatusOK,
-		Data: res,
+		Data: listProviderResp{
+			Records: res,
+		},
 	}, nil
 }
 
