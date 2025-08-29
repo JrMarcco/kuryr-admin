@@ -3,6 +3,7 @@ package ioc
 import (
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -50,12 +51,7 @@ func InitCorsBuilder() *middleware.CorsBuilder {
 				return false
 			}
 			reqHostname := u.Hostname()
-			for _, hostname := range cfg.Hostnames {
-				if reqHostname == hostname {
-					return true
-				}
-			}
-			return false
+			return slices.Contains(cfg.Hostnames, reqHostname)
 		})
 	return builder
 }
@@ -66,7 +62,7 @@ func InitJwtBuilder(handler ijwt.Handler, jwtManager easyjwt.Manager[pkggin.Auth
 		panic(err)
 	}
 
-	ts, err := set.NewTreeSet[string](strings.Compare)
+	ts, err := set.NewTreeSet(strings.Compare)
 	if err != nil {
 		panic(err)
 	}

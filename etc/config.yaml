@@ -20,6 +20,7 @@ cors:
   max_age: 86400
   hostnames:
     - "localhost"
+    - "172.31.187.9" # my wsl ip
 
 jwt:
   private: |

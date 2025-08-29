@@ -167,9 +167,16 @@ func (s *DefaultBizService) Search(ctx context.Context, criteria search.BizSearc
 	resp, err := grpcClient.Search(ctx, &businessv1.SearchRequest{
 		FieldMask: &fieldmaskpb.FieldMask{
 			Paths: []string{
+				businessv1.FieldId,
 				businessv1.FieldBizKey,
 				businessv1.FieldBizName,
 				businessv1.FieldBizType,
+				businessv1.FieldBizSecret,
+				businessv1.FieldContact,
+				businessv1.FieldContactEmail,
+				businessv1.FieldCreatorId,
+				businessv1.FieldCreatedAt,
+				businessv1.FieldUpdatedAt,
 			},
 		},
 		Offset:  int32(param.Offset),

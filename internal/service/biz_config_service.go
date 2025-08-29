@@ -2,12 +2,14 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/JrMarcco/easy-grpc/client"
 	"github.com/JrMarcco/kuryr-admin/internal/domain"
 	commonv1 "github.com/JrMarcco/kuryr-api/api/go/common/v1"
 	configv1 "github.com/JrMarcco/kuryr-api/api/go/config/v1"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
 type BizConfigService interface {
@@ -122,24 +124,23 @@ func (s *DefaultBizConfigService) convertToPbRetry(config *domain.RetryConfig) *
 }
 
 func (s *DefaultBizConfigService) FindByBizId(ctx context.Context, id uint64) (domain.BizConfig, error) {
-	// TODO: implement me
-	panic("implement me")
-	// grpcClient, err := s.grpcClients.Get(s.grpcServerName)
-	// if err != nil {
-	// 	return domain.BizConfig{}, fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
-	// }
+	grpcClient, err := s.grpcClients.Get(s.grpcServerName)
+	if err != nil {
+		return domain.BizConfig{}, fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
+	}
 
-	// ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	// resp, err := grpcClient.FindById(ctx, &configv1.FindByIdRequest{Id: id})
-	// cancel()
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
 
-	// if err != nil {
-	// 	return domain.BizConfig{}, fmt.Errorf("[kuryr-admin] failed to get biz config: %w", err)
-	// }
-	// if resp.ErrCode == commonv1.ErrCode_BIZ_CONFIG_NOT_FOUND {
-	// 	return domain.BizConfig{}, errs.ErrRecordNotFound
-	// }
-	// return s.pbToDomain(resp.Config), nil
+	resp, err := grpcClient.FindByBizId(ctx, &configv1.FindByBizIdRequest{
+		// FieldMask 传空会返回所有字段
+		FieldMask: &fieldmaskpb.FieldMask{},
+		BizId:     id,
+	})
+	if err != nil {
+		return domain.BizConfig{}, fmt.Errorf("[kuryr-admin] failed to get biz config: %w", err)
+	}
+	return s.pbToDomain(resp.BizConfig), nil
 }
 
 func (s *DefaultBizConfigService) pbToDomain(pb *configv1.BizConfig) domain.BizConfig {
