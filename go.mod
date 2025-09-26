@@ -1,6 +1,6 @@
 module github.com/JrMarcco/kuryr-admin
 
-go 1.25.0
+go 1.25.1
 
 require (
 	github.com/JrMarcco/easy-grpc v0.0.13

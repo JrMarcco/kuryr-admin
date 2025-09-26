@@ -46,27 +46,15 @@ var HandlerFxOpt = fx.Module(
 			fx.As(new(pkggin.RouteRegistry)),
 			fx.ResultTags(`group:"handler"`),
 		),
+
+		// template handler
+		fx.Annotate(
+			web.NewTemplateHandler,
+			fx.As(new(pkggin.RouteRegistry)),
+			fx.ResultTags(`group:"handler"`),
+		),
 	),
 )
-
-// var HandlerFxInvoke = fx.Invoke(
-// 	fx.Annotate(
-// 		RegisterRoutes,
-// 		fx.ParamTags(``, ``, `group:"handler"`),
-// 	),
-// )
-
-// // RegisterRoutes 注册路由
-// // 注意：
-// //
-// //	这里声明 ioc.App 是为了保证 fx 在 ioc.RegisterRoutes 之前完成 engine.Use(middlewares...) 。
-// //	ioc.RegisterRoutes 在 engine.Use(middlewares...) 之前调用
-// //	会导致这里注册的路由“错过”这里注册的 middleware ，即导致 middleware 失效。
-// func RegisterRoutes(_ *App, engine *gin.Engine, registries []pkggin.RouteRegistry) {
-// 	for _, registry := range registries {
-// 		registry.RegisterRoutes(engine)
-// 	}
-// }
 
 func InitRedisJwtHandler(rc redis.Cmdable) ijwt.Handler {
 	var expiration int

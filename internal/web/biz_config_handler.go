@@ -134,7 +134,7 @@ func (h *BizConfigHandler) Save(ctx *gin.Context, req saveBizConfigReq) (pkggin.
 		}
 	}
 
-	err := h.svc.Save(ctx, bizConfig)
+	_, err := h.svc.Save(ctx, bizConfig)
 	if err != nil {
 		return pkggin.R{}, err
 	}

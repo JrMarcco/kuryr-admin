@@ -16,7 +16,7 @@ import (
 )
 
 type BizConfigService interface {
-	Save(ctx context.Context, bizConfig domain.BizConfig) error
+	Save(ctx context.Context, bizConfig domain.BizConfig) (domain.BizConfig, error)
 	FindByBizId(ctx context.Context, id uint64) (domain.BizConfig, error)
 }
 
@@ -27,10 +27,10 @@ type DefaultBizConfigService struct {
 	grpcClients    *client.Manager[configv1.BizConfigServiceClient]
 }
 
-func (s *DefaultBizConfigService) Save(ctx context.Context, bizConfig domain.BizConfig) error {
+func (s *DefaultBizConfigService) Save(ctx context.Context, bizConfig domain.BizConfig) (domain.BizConfig, error) {
 	grpcClient, err := s.grpcClients.Get(s.grpcServerName)
 	if err != nil {
-		return fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
+		return domain.BizConfig{}, fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
 	}
 
 	// 构建 grpc 请求
@@ -53,28 +53,36 @@ func (s *DefaultBizConfigService) Save(ctx context.Context, bizConfig domain.Biz
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
 	if bizConfig.Id == 0 {
-		_, err = grpcClient.Save(ctx, &configv1.SaveRequest{BizConfig: pb})
-	} else {
-		fieldMask := &fieldmaskpb.FieldMask{
-			Paths: []string{
-				configv1.FieldChannelConfig,
-				configv1.FieldQuotaConfig,
-				configv1.FieldCallbackConfig,
-				configv1.FieldRateLimit,
-			},
+		// 创建配置
+		resp, err := grpcClient.Save(ctx, &configv1.SaveRequest{BizConfig: pb})
+		if err != nil {
+			return domain.BizConfig{}, fmt.Errorf("[kuryr-admin] failed to save biz config: %w", err)
 		}
-		_, err = grpcClient.Update(ctx, &configv1.UpdateRequest{
-			FieldMask: fieldMask,
-			BizConfig: pb,
-		})
+		return s.pbToDomain(resp.BizConfig), nil
 	}
-	cancel()
+
+	fieldMask := &fieldmaskpb.FieldMask{
+		Paths: []string{
+			configv1.FieldChannelConfig,
+			configv1.FieldQuotaConfig,
+			configv1.FieldCallbackConfig,
+			configv1.FieldRateLimit,
+		},
+	}
+
+	// 更新配置
+	resp, err := grpcClient.Update(ctx, &configv1.UpdateRequest{
+		FieldMask: fieldMask,
+		BizConfig: pb,
+	})
 
 	if err != nil {
-		return fmt.Errorf("[kuryr-admin] failed to save biz config: %w", err)
+		return domain.BizConfig{}, fmt.Errorf("[kuryr-admin] failed to save biz config: %w", err)
 	}
-	return nil
+	return s.pbToDomain(resp.BizConfig), nil
 }
 
 // convertToPbChannel 渠道配置 proto buf

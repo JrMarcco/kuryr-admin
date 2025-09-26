@@ -9,6 +9,7 @@ import (
 	businessv1 "github.com/JrMarcco/kuryr-api/api/go/business/v1"
 	configv1 "github.com/JrMarcco/kuryr-api/api/go/config/v1"
 	providerv1 "github.com/JrMarcco/kuryr-api/api/go/provider/v1"
+	templatev1 "github.com/JrMarcco/kuryr-api/api/go/template/v1"
 	"github.com/spf13/viper"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
@@ -44,6 +45,12 @@ var ServiceFxOpt = fx.Module(
 			InitProviderService,
 			fx.As(new(service.ProviderService)),
 		),
+
+		// template service
+		fx.Annotate(
+			InitTemplateService,
+			fx.As(new(service.TemplateService)),
+		),
 	),
 )
 
@@ -74,6 +81,12 @@ func InitBizConfigService(grpcClients *client.Manager[configv1.BizConfigServiceC
 
 func InitProviderService(grpcClients *client.Manager[providerv1.ProviderServiceClient]) *service.DefaultProviderService {
 	return service.NewDefaultProviderService(
+		grpcServerName(), grpcClients,
+	)
+}
+
+func InitTemplateService(grpcClients *client.Manager[templatev1.TemplateServiceClient]) *service.DefaultTemplateService {
+	return service.NewDefaultTemplateService(
 		grpcServerName(), grpcClients,
 	)
 }

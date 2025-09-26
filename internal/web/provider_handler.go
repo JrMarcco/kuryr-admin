@@ -56,7 +56,7 @@ func (h *ProviderHandler) Save(ctx *gin.Context, req saveProviderReq) (pkggin.R,
 		AuditCallbackUrl: req.AuditCallbackUrl,
 	}
 
-	err := h.svc.Save(ctx, provider)
+	_, err := h.svc.Save(ctx, provider)
 	if err != nil {
 		return pkggin.R{}, err
 	}

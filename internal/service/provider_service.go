@@ -13,7 +13,7 @@ import (
 )
 
 type ProviderService interface {
-	Save(ctx context.Context, provider domain.Provider) error
+	Save(ctx context.Context, provider domain.Provider) (domain.Provider, error)
 	List(ctx context.Context) ([]domain.Provider, error)
 	FindByChannel(ctx context.Context, channel int32) ([]domain.Provider, error)
 }
@@ -25,21 +25,21 @@ type DefaultProviderService struct {
 	grpcClients    *client.Manager[providerv1.ProviderServiceClient]
 }
 
-func (s *DefaultProviderService) Save(ctx context.Context, provider domain.Provider) error {
+func (s *DefaultProviderService) Save(ctx context.Context, provider domain.Provider) (domain.Provider, error) {
 	grpcClient, err := s.grpcClients.Get(s.grpcServerName)
 	if err != nil {
-		return fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
+		return domain.Provider{}, fmt.Errorf("[kuryr-admin] failed to get grpc client: %w", err)
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	_, err = grpcClient.Save(ctx, &providerv1.SaveRequest{Provider: s.domainToPb(provider)})
+	resp, err := grpcClient.Save(ctx, &providerv1.SaveRequest{Provider: s.domainToPb(provider)})
 
 	if err != nil {
-		return fmt.Errorf("[kuryr-admin] failed to save provider: %w", err)
+		return domain.Provider{}, fmt.Errorf("[kuryr-admin] failed to save provider: %w", err)
 	}
-	return nil
+	return s.pbToDomain(resp.Provider), nil
 }
 
 func (s *DefaultProviderService) domainToPb(provider domain.Provider) *providerv1.Provider {
